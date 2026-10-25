@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Models\Voter;
 
 return [
 
@@ -42,6 +43,18 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'voter' => [
+            'driver' => 'session',
+            'provider' => 'voters',
+        ],
+        'users' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
+        'voters' => [
+            'driver' => 'sanctum',
+            'provider' => 'voters',
+        ],
     ],
 
     /*
@@ -65,6 +78,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'voters' => [
+            'driver' => 'eloquent',
+            'model' => Voter::class,
         ],
 
         // 'users' => [

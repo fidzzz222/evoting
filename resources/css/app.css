@@ -1,1 +1,47 @@
-@import "tailwindcss/base";
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+:root {
+    --color-primary: #2563eb;
+    --color-on-primary: #ffffff;
+    --color-secondary: #0ea5e9;
+    --color-accent: #10b981;
+    --color-background: #f8fafc;
+    --color-card: #ffffff;
+    --color-muted: #f1f5f9;
+    --color-muted-foreground: #64748b;
+    --color-border: #e2e8f0;
+    --color-destructive: #e11d48;
+    --color-ring: #2563eb;
+}
+
+/* Base comfortable font and text rendering */
+body {
+    font-family: var(--font-sans);
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* UI-UX-PRO-MAX Checklist Enforcement */
+button:not(:disabled),
+[role="button"],
+a {
+    cursor: pointer;
+}
+
+/* Accessibility: respects user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
