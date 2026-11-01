@@ -72,6 +72,13 @@ class PetugasController extends Controller
     public function destroy(string $id)
     {
         $petugas = User::where('role', 'PETUGAS')->findOrFail($id);
+
+        if ($petugas->events()->exists()) {
+            return response()->json([
+                'message' => 'Petugas tidak dapat dihapus karena masih memiliki event pemilihan yang dibuat.',
+            ], 422);
+        }
+
         $petugas->delete();
 
         return response()->json([

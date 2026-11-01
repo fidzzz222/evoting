@@ -37,11 +37,11 @@ class AdminAuthController extends Controller
             ], $user);
 
             return redirect()->intended(route('admin.dashboard'))
-                ->with('success', "Selamat datang kembali, {$user->nama}!");
+                ->with('success', "Berhasil masuk sebagai {$user->nama}.");
         }
 
         return back()->withErrors([
-            'email' => 'Email atau kata sandi yang Anda masukkan salah.',
+            'email' => 'Email atau kata sandi tidak valid.',
         ])->onlyInput('email');
     }
 
@@ -56,6 +56,6 @@ class AdminAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('admin.login')->with('success', 'Anda telah berhasil logout.');
+        return redirect()->route('admin.login')->with('success', 'Berhasil keluar dari sistem.');
     }
 }

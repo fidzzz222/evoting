@@ -2,11 +2,19 @@
 
 @section('content')
 <div class="space-y-8" x-data="{
+    copiedMsg: '',
+    copiedTimeout: null,
     copy(text, msg) {
-        navigator.clipboard.writeText(text);
-        alert(msg || 'Disalin ke papan klip!');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text);
+        }
+        this.copiedMsg = msg || 'Tautan disalin.';
+        if (this.copiedTimeout) clearTimeout(this.copiedTimeout);
+        this.copiedTimeout = setTimeout(() => { this.copiedMsg = ''; }, 2200);
     }
 }">
+    <!-- Sleek Toast Feedback -->
+    <x-toast-notification show="copiedMsg" />
     <!-- Top Action / Breadcrumbs Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <a href="{{ route('events.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
@@ -26,25 +34,7 @@
         </div>
     </div>
 
-    @if($event->candidates->count() < 2)
-        <div class="rounded-2xl border border-amber-200 bg-amber-50/90 p-5 text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-            <div class="flex items-start gap-3">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-200 text-amber-800 font-bold text-xs shrink-0 mt-0.5">!</span>
-                <div>
-                    <h3 class="font-semibold text-sm text-amber-950">Langkah Berikutnya: Pendaftaran Pasangan Calon</h3>
-                    <p class="text-amber-800 mt-0.5 leading-relaxed">
-                        Agenda ini baru memiliki <strong>{{ $event->candidates->count() }} pasangan calon</strong>. Minimal <strong>2 paslon</strong> wajib terdaftar sebelum agenda pemilihan dapat dibuka untuk pemungutan suara.
-                    </p>
-                </div>
-            </div>
-            <a 
-                href="{{ route('events.candidates.create', $event) }}" 
-                class="shrink-0 inline-flex items-center px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-xs transition-colors"
-            >
-                <span>Daftarkan Paslon #{{ $event->candidates->count() + 1 }}</span>
-            </a>
-        </div>
-    @endif
+    <x-insufficient-candidates-alert :event="$event" />
 
     <!-- Event Header Hero Card -->
     <div class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-7 shadow-xs">
@@ -54,29 +44,7 @@
                     <span class="text-xs font-medium text-slate-500">
                         {{ $event->category_label }}
                     </span>
-
-                    @if($event->status === 'PUBLISHED' && !$event->isAfterEndTime())
-                        @if($event->isBeforeStartTime())
-                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/80">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                Menunggu Jadwal
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                Aktif
-                            </span>
-                        @endif
-                    @elseif($event->status === 'CLOSED' || $event->isAfterEndTime())
-                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-200/80">
-                            Ditutup
-                        </span>
-                    @else
-                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/80">
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                            Draft
-                        </span>
-                    @endif
+                    <x-event-status-badge :event="$event" />
                 </div>
 
                 <h1 class="text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight">
@@ -218,7 +186,7 @@
                 </div>
                 <button
                     type="button"
-                    @click="copy('{{ $event->room_code }}', 'Kode bilik #{{ $event->room_code }} disalin!')"
+                    @click="copy('{{ $event->room_code }}', 'Kode bilik disalin')"
                     class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs shadow-xs border border-slate-900 transition-colors cursor-pointer"
                 >
                     Salin Kode
@@ -243,7 +211,7 @@
                 />
                 <button
                     type="button"
-                    @click="copy('{{ $inviteUrl }}', 'Tautan panitia disalin!')"
+                    @click="copy('{{ $inviteUrl }}', 'Tautan panitia disalin')"
                     class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs border border-slate-900 transition-colors shrink-0 cursor-pointer"
                 >
                     Salin Tautan
@@ -323,7 +291,7 @@
                 <h4 class="text-sm font-bold text-slate-800">Hapus Agenda Pemilihan</h4>
                 <p class="text-xs text-slate-500">Seluruh data kandidat dan perolehan suara pada agenda ini akan dihapus permanen.</p>
             </div>
-            <form action="{{ route('events.destroy', $event) }}" method="POST" onsubmit="return confirm('YAKIN INGIN MENGHAPUS AGENDA INI? Tindakan ini tidak dapat dibatalkan.')">
+            <form action="{{ route('events.destroy', $event) }}" method="POST" onsubmit="return confirm('Hapus agenda pemilihan ini? Tindakan tidak dapat dibatalkan.')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition-colors cursor-pointer shrink-0">

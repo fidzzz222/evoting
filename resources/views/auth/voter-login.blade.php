@@ -12,28 +12,27 @@
         <div class="p-6 sm:p-8">
             <!-- Alert & Error Notifications -->
             @if($errors->any())
-                <div class="mb-5 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-3 shadow-xs">
-                    <div class="w-6 h-6 rounded-lg bg-rose-100 flex items-center justify-center shrink-0 text-rose-600 mt-0.5">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <div class="mb-5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-center gap-2.5">
+                    <div class="w-5 h-5 rounded-md bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <circle cx="12" cy="12" r="10" />
                             <line x1="12" y1="8" x2="12" y2="12" />
                             <line x1="12" y1="16" x2="12.01" y2="16" />
                         </svg>
                     </div>
-                    <div>
-                        <span class="font-bold text-rose-900 block mb-0.5">Gagal Masuk</span>
-                        <span>{{ $errors->first() }}</span>
-                    </div>
+                    <span class="font-medium text-slate-800 flex-1">{{ $errors->first() }}</span>
                 </div>
             @endif
 
             @if(session('status'))
-                <div class="mb-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-3">
-                    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="m9 12 2 2 4-4" />
-                    </svg>
-                    <span class="font-medium">{{ session('status') }}</span>
+                <div class="mb-5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-center gap-2.5">
+                    <div class="w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="m9 12 2 2 4-4" />
+                        </svg>
+                    </div>
+                    <span class="font-medium text-slate-800 flex-1">{{ session('status') }}</span>
                 </div>
             @endif
 

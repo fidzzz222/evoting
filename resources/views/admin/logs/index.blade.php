@@ -12,7 +12,7 @@
 
         <div class="flex flex-wrap items-center gap-2">
             <!-- Clear Cache Tool -->
-            <form action="{{ route('admin.logs.clear-cache') }}" method="POST" onsubmit="return confirm('Bersihkan seluruh cache aplikasi (config, route, views)?')">
+            <form action="{{ route('admin.logs.clear-cache') }}" method="POST" onsubmit="return confirm('Bersihkan cache aplikasi?')">
                 @csrf
                 <button
                     type="submit"

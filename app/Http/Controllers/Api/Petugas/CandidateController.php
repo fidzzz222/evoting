@@ -3,51 +3,32 @@
 namespace App\Http\Controllers\Api\Petugas;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCandidateRequest;
+use App\Http\Requests\UpdateCandidateRequest;
 use App\Models\Candidate;
 use App\Models\Event;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class CandidateController extends Controller
 {
-    public function store(Request $request, string $eventId)
+    public function store(StoreCandidateRequest $request, string $eventId)
     {
-        $user = $request->user();
-        $query = Event::query();
-        if ($user->role !== 'SUPER_ADMIN') {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by_user_id', $user->id)
-                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                      $officerQuery->where('users.id', $user->id);
-                  });
-            });
-        }
-        $event = $query->findOrFail($eventId);
+        $event = Event::accessibleBy($request->user())->findOrFail($eventId);
 
-        $validated = $request->validate([
-            'candidate_number' => 'required|integer',
-            'name' => 'required|string|max:255',
-            'photo' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:20480',
-            'description' => 'nullable|string',
-            'vision' => 'nullable|string',
-            'mission' => 'nullable|string',
-        ]);
-
-        $photoUrl = null;
-        if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('candidates', 'public');
-            $photoUrl = Storage::url($path);
-        }
+        $validated = $request->validated();
 
         $candidate = Candidate::create([
             'event_id' => $event->id,
             'candidate_number' => $validated['candidate_number'],
-            'name' => $validated['name'],
-            'photo_url' => $photoUrl,
+            'name' => $request->getCandidatePairName(),
             'description' => $validated['description'] ?? null,
             'vision' => $validated['vision'] ?? null,
             'mission' => $validated['mission'] ?? null,
         ]);
+
+        if ($request->hasFile('photo')) {
+            $candidate->savePhoto($request->file('photo'));
+        }
 
         $event->syncDynamicStatus();
 
@@ -57,40 +38,23 @@ class CandidateController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateCandidateRequest $request, string $id)
     {
-        $user = $request->user();
-        $candidate = Candidate::whereHas('event', function ($query) use ($user) {
-            if ($user->role !== 'SUPER_ADMIN') {
-                $query->where(function ($q) use ($user) {
-                    $q->where('created_by_user_id', $user->id)
-                      ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                          $officerQuery->where('users.id', $user->id);
-                      });
-                });
-            }
-        })->findOrFail($id);
+        $candidate = Candidate::whereHas('event', fn($q) => $q->accessibleBy($request->user()))->findOrFail($id);
 
-        $validated = $request->validate([
-            'candidate_number' => 'sometimes|required|integer',
-            'name' => 'sometimes|required|string|max:255',
-            'photo' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:20480',
-            'description' => 'nullable|string',
-            'vision' => 'nullable|string',
-            'mission' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         if (isset($validated['candidate_number'])) {
             $candidate->candidate_number = $validated['candidate_number'];
         }
 
-        if (isset($validated['name'])) {
-            $candidate->name = $validated['name'];
+        $name = $request->getCandidatePairName();
+        if (!empty($name)) {
+            $candidate->name = $name;
         }
 
         if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('candidates', 'public');
-            $candidate->photo_url = Storage::url($path);
+            $candidate->savePhoto($request->file('photo'));
         }
 
         if (array_key_exists('description', $validated)) {
@@ -115,20 +79,18 @@ class CandidateController extends Controller
 
     public function destroy(Request $request, string $id)
     {
-        $user = $request->user();
-        $candidate = Candidate::whereHas('event', function ($query) use ($user) {
-            if ($user->role !== 'SUPER_ADMIN') {
-                $query->where(function ($q) use ($user) {
-                    $q->where('created_by_user_id', $user->id)
-                      ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                          $officerQuery->where('users.id', $user->id);
-                      });
-                });
-            }
-        })->findOrFail($id);
+        $candidate = Candidate::whereHas('event', fn($q) => $q->accessibleBy($request->user()))->findOrFail($id);
 
         $event = $candidate->event;
+
+        if ($candidate->votes()->exists() || $event->votes()->exists()) {
+            return response()->json([
+            'message' => 'Kandidat tidak dapat dihapus karena pemilihan telah menerima suara sah.',
+            ], 422);
+        }
+
         $candidate->delete();
+
         $event->syncDynamicStatus();
 
         return response()->json([

@@ -59,7 +59,7 @@ class AuditLogController extends Controller
 
         AuditLog::log('LOGS_PRUNED', "Membersihkan {$deleted} catatan audit trail yang lebih dari {$days} hari");
 
-        return back()->with('success', "Berhasil membersihkan {$deleted} catatan log lama.");
+        return back()->with('success', "{$deleted} catatan log berhasil dibersihkan.");
     }
 
     /**
@@ -71,6 +71,6 @@ class AuditLogController extends Controller
         
         AuditLog::log('SYSTEM_CACHE_CLEARED', 'Melakukan pembersihan cache sistem (optimize:clear)');
 
-        return back()->with('success', 'Cache sistem (view, route, config) berhasil dibersihkan dan dioptimalkan!');
+        return back()->with('success', 'Cache sistem berhasil dibersihkan.');
     }
 }

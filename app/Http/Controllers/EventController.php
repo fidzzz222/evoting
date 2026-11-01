@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreEventRequest;
+use App\Http\Requests\UpdateEventRequest;
 use App\Models\AuditLog;
 use App\Models\Candidate;
 use App\Models\Event;
@@ -21,18 +23,9 @@ class EventController extends Controller
         // Sinkronisasi status seluruh agenda secara otomatis sesuai jadwal mulai & selesai
         Event::syncAllEventStatuses();
 
-        $user = Auth::user();
-        $query = Event::with(['creator', 'candidates'])
+        $query = Event::accessibleBy(Auth::user())
+            ->with(['creator', 'candidates'])
             ->withCount(['candidates', 'votes', 'participations']);
-
-        if (!$user->isSuperAdmin()) {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by_user_id', $user->id)
-                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                      $officerQuery->where('users.id', $user->id);
-                  });
-            });
-        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -60,7 +53,7 @@ class EventController extends Controller
      */
     public function create()
     {
-        $suggestedRoomCode = strtoupper(Str::random(6));
+        $suggestedRoomCode = Event::generateUniqueRoomCode();
         $availableClasses = Voter::where('type', 'SISWA')
             ->whereNotNull('kelas')
             ->where('kelas', '!=', '')
@@ -74,39 +67,22 @@ class EventController extends Controller
     /**
      * Store a newly created event in storage.
      */
-    public function store(Request $request)
+    public function store(StoreEventRequest $request)
     {
-        $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'string', 'max:100'],
-            'target_scope' => ['required', 'in:ALL,SISWA,GURU,KELAS'],
-            'target_class' => ['nullable', 'string', 'max:255', 'required_if:target_scope,KELAS'],
-            'description' => ['nullable', 'string'],
-            'room_code' => ['required', 'string', 'size:6', 'alpha_num', 'unique:events,room_code'],
-            'start_time' => ['required', 'date'],
-            'end_time' => ['required', 'date', 'after:start_time'],
-        ], [
-            'start_time.required' => 'Jadwal mulai pemilihan wajib diisi.',
-            'start_time.date' => 'Format jadwal mulai tidak valid.',
-            'end_time.required' => 'Jadwal selesai pemilihan wajib diisi.',
-            'end_time.date' => 'Format jadwal selesai tidak valid.',
-            'end_time.after' => 'Jadwal selesai harus setelah jadwal mulai.',
-            'target_class.required_if' => 'Nama kelas target wajib diisi jika jangkauan pemilihan adalah spesifik kelas.',
-            'room_code.size' => 'Kode bilik suara harus tepat 6 karakter.',
-        ]);
+        $validated = $request->validated();
 
         $event = Event::create([
             'created_by_user_id' => Auth::id(),
-            'title' => $request->title,
-            'category' => $request->category,
-            'target_scope' => $request->target_scope ?? 'ALL',
-            'target_class' => $request->target_scope === 'KELAS' ? trim($request->target_class) : null,
-            'description' => $request->description,
-            'room_code' => strtoupper($request->room_code),
-            'invite_token' => Str::random(32),
+            'title' => $validated['title'],
+            'category' => $validated['category'],
+            'target_scope' => $validated['target_scope'] ?? 'ALL',
+            'target_class' => ($validated['target_scope'] ?? '') === 'KELAS' ? trim($validated['target_class']) : null,
+            'description' => $validated['description'] ?? null,
+            'room_code' => strtoupper($validated['room_code']),
+            'invite_token' => Event::generateUniqueInviteToken(),
             'status' => 'DRAFT',
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
+            'start_time' => $validated['start_time'],
+            'end_time' => $validated['end_time'],
         ]);
 
         $event->syncDynamicStatus();
@@ -127,7 +103,7 @@ class EventController extends Controller
         );
 
         return redirect()->route('events.candidates.create', $event)
-            ->with('success', "Agenda pemilihan '{$event->title}' berhasil dibuat. Silakan daftarkan pasangan calon (wajib minimal 2 paslon).");
+            ->with('success', "Agenda '{$event->title}' berhasil dibuat. Daftarkan minimal 2 paslon.");
     }
 
     /**
@@ -169,38 +145,21 @@ class EventController extends Controller
     /**
      * Update the specified event in storage.
      */
-    public function update(Request $request, Event $event)
+    public function update(UpdateEventRequest $request, Event $event)
     {
         $this->authorizeEventAccess($event);
 
-        $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'string', 'max:100'],
-            'target_scope' => ['required', 'in:ALL,SISWA,GURU,KELAS'],
-            'target_class' => ['nullable', 'string', 'max:255', 'required_if:target_scope,KELAS'],
-            'description' => ['nullable', 'string'],
-            'room_code' => ['required', 'string', 'size:6', 'alpha_num', 'unique:events,room_code,' . $event->id],
-            'start_time' => ['required', 'date'],
-            'end_time' => ['required', 'date', 'after:start_time'],
-        ], [
-            'start_time.required' => 'Jadwal mulai pemilihan wajib diisi.',
-            'start_time.date' => 'Format jadwal mulai tidak valid.',
-            'end_time.required' => 'Jadwal selesai pemilihan wajib diisi.',
-            'end_time.date' => 'Format jadwal selesai tidak valid.',
-            'end_time.after' => 'Jadwal selesai harus setelah jadwal mulai.',
-            'target_class.required_if' => 'Nama kelas target wajib diisi jika jangkauan pemilihan adalah spesifik kelas.',
-            'room_code.size' => 'Kode bilik suara harus tepat 6 karakter.',
-        ]);
+        $validated = $request->validated();
 
         $event->update([
-            'title' => $request->title,
-            'category' => $request->category,
-            'target_scope' => $request->target_scope ?? 'ALL',
-            'target_class' => $request->target_scope === 'KELAS' ? trim($request->target_class) : null,
-            'description' => $request->description,
-            'room_code' => strtoupper($request->room_code),
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
+            'title' => $validated['title'],
+            'category' => $validated['category'],
+            'target_scope' => $validated['target_scope'] ?? 'ALL',
+            'target_class' => ($validated['target_scope'] ?? '') === 'KELAS' ? trim($validated['target_class']) : null,
+            'description' => $validated['description'] ?? null,
+            'room_code' => strtoupper($validated['room_code']),
+            'start_time' => $validated['start_time'],
+            'end_time' => $validated['end_time'],
         ]);
 
         $event->syncDynamicStatus();
@@ -212,7 +171,7 @@ class EventController extends Controller
         );
 
         return redirect()->route('events.show', $event)
-            ->with('success', 'Informasi agenda pemilihan berhasil diperbarui.');
+            ->with('success', 'Agenda pemilihan berhasil diperbarui.');
     }
 
     /**
@@ -232,11 +191,11 @@ class EventController extends Controller
         // If activating, make sure there are at least 2 candidates
         if ($newStatus === 'PUBLISHED') {
             if ($event->candidates()->count() < 2) {
-                return back()->with('error', 'Pemilihan membutuhkan minimal 2 pasangan calon sebelum dapat diaktifkan.');
+                return back()->with('error', 'Minimal 2 paslon untuk mengaktifkan agenda.');
             }
 
             if ($event->isAfterEndTime()) {
-                return back()->with('error', "Pemilihan tidak dapat diaktifkan karena batas jadwal selesai ({$event->formatted_end_time}) telah terlewati. Silakan edit jadwal selesai terlebih dahulu.");
+                return back()->with('error', "Batas waktu ({$event->formatted_end_time}) telah berakhir. Perbarui jadwal selesai.");
             }
         }
 
@@ -249,7 +208,7 @@ class EventController extends Controller
             ['event_id' => $event->id, 'old' => $oldStatus, 'new' => $newStatus]
         );
 
-        return back()->with('success', "Status pemilihan berhasil diubah menjadi: {$event->status_label}.");
+        return back()->with('success', "Status agenda diubah menjadi {$event->status_label}.");
     }
 
     /**
@@ -260,14 +219,14 @@ class EventController extends Controller
         $token = $request->query('token');
 
         if (!$token || $event->invite_token !== $token) {
-            return redirect()->route('dashboard')->with('error', 'Tautan undangan kolaborator tidak valid atau sudah kadaluarsa.');
+            return redirect()->route('dashboard')->with('error', 'Tautan undangan tidak valid atau kedaluwarsa.');
         }
 
         $user = Auth::user();
 
         // Check if already creator or officer or super admin
         if ($user->isSuperAdmin() || $event->created_by_user_id === $user->id || $event->officers()->where('users.id', $user->id)->exists()) {
-            return redirect()->route('events.show', $event)->with('info', 'Anda sudah terdaftar sebagai petugas pada pemilihan ini.');
+            return redirect()->route('events.show', $event)->with('info', 'Anda sudah terdaftar sebagai panitia.');
         }
 
         $event->officers()->attach($user->id);
@@ -279,7 +238,7 @@ class EventController extends Controller
         );
 
         return redirect()->route('events.show', $event)
-            ->with('success', "Selamat datang! Anda kini menjadi panitia kolaborator untuk '{$event->title}'.");
+            ->with('success', "Berhasil bergabung dalam panitia '{$event->title}'.");
     }
 
     /**
@@ -291,7 +250,7 @@ class EventController extends Controller
 
         $event->update(['invite_token' => Str::random(32)]);
 
-        return back()->with('success', 'Tautan undangan kolaborator berhasil diperbarui.');
+        return back()->with('success', 'Tautan undangan berhasil diperbarui.');
     }
 
     /**
@@ -310,7 +269,7 @@ class EventController extends Controller
             ['title' => $title]
         );
 
-        return redirect()->route('events.index')->with('success', "Agenda pemilihan '{$title}' berhasil dihapus.");
+        return redirect()->route('events.index')->with('success', "Agenda '{$title}' berhasil dihapus.");
     }
 
     /**
@@ -318,14 +277,7 @@ class EventController extends Controller
      */
     protected function authorizeEventAccess(Event $event): void
     {
-        $user = Auth::user();
-
-        if ($user->isSuperAdmin()) {
-            return;
-        }
-
-        $isOfficer = $event->officers()->where('users.id', $user->id)->exists();
-        if ($event->created_by_user_id !== $user->id && !$isOfficer) {
+        if (!$event->canBeManagedBy(Auth::user())) {
             abort(403, 'Anda tidak memiliki hak akses untuk mengelola agenda pemilihan ini.');
         }
     }

@@ -19,13 +19,30 @@
             </div>
             <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
                 <span>Monitoring Perolehan Suara</span>
-                @if($event->status === 'ACTIVE')
+                @if($event->isActive())
                     <span
                         x-show="autoPoll"
                         class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800"
                     >
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span>Live</span>
+                    </span>
+                    <span
+                        x-show="!autoPoll"
+                        x-cloak
+                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700"
+                    >
+                        <span>Selesai</span>
+                    </span>
+                @elseif($event->status === 'PUBLISHED' && $event->isBeforeStartTime())
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-800">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Menunggu Jadwal</span>
+                    </span>
+                @elseif($event->status === 'DRAFT')
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-800">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Draft</span>
                     </span>
                 @else
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700">
@@ -124,7 +141,7 @@
                         <h3 class="text-base font-bold text-slate-900 tracking-tight">Perolehan Suara Paslon</h3>
                     </div>
                     <span class="text-xs font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
-                        {{ $event->status === 'ACTIVE' ? 'Real-time' : 'Hasil Akhir' }}
+                        <span x-text="autoPoll ? 'Real-time' : 'Hasil Akhir'">{{ $event->isActive() ? 'Real-time' : 'Hasil Akhir' }}</span>
                     </span>
                 </div>
 
@@ -232,7 +249,7 @@ function monitoringApp(eventId, initialStats) {
         eventId: eventId,
         stats: initialStats,
         lastUpdated: '{{ now()->format('H:i:s') }}',
-        autoPoll: {{ $event->status === 'ACTIVE' ? 'true' : 'false' }},
+        autoPoll: {{ $event->isActive() ? 'true' : 'false' }},
         pollInterval: null,
 
         initCharts() {
@@ -243,7 +260,7 @@ function monitoringApp(eventId, initialStats) {
             }
             this.setupBarChart();
             this.setupDoughnutChart();
-            if ('{{ $event->status }}' === 'ACTIVE') {
+            if (this.autoPoll) {
                 this.startPolling();
             }
         },
@@ -395,9 +412,18 @@ function monitoringApp(eventId, initialStats) {
                     this.stats.candidateStats = data.candidates;
                     this.lastUpdated = data.timestamp;
                     this.updateCharts();
+
+                    if (data.status === 'CLOSED' || !data.is_active) {
+                        this.autoPoll = false;
+                        this.stopPolling();
+                    }
                 })
                 .catch(err => {
                     console.warn('Gagal memperbarui data live stats:', err);
+                    if (err && err.response && [401, 403, 404].includes(err.response.status)) {
+                        this.autoPoll = false;
+                        this.stopPolling();
+                    }
                 });
         },
 

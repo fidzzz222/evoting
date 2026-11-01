@@ -6,6 +6,8 @@ use App\Models\AuditLog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class Event extends Model
 {
@@ -415,5 +417,152 @@ class Event extends Model
             'LAINNYA' => 'Umum',
             default => ucwords(strtolower(str_replace('_', ' ', (string) $this->category))),
         };
+    }
+
+    /**
+     * Scope query to events accessible by the given user.
+     * Super Admin can access all events; Petugas only sees events they created or are assigned as officers.
+     */
+    public function scopeAccessibleBy($query, ?User $user = null)
+    {
+        $user = $user ?? Auth::user();
+
+        if (!$user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->where('created_by_user_id', $user->id)
+              ->orWhereHas('officers', function ($officerQuery) use ($user) {
+                  $officerQuery->where('users.id', $user->id);
+              });
+        });
+    }
+
+    /**
+     * Determine if the event can be managed by the given user.
+     */
+    public function canBeManagedBy(?User $user = null): bool
+    {
+        $user = $user ?? Auth::user();
+
+        if (!$user) {
+            return false;
+        }
+
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ((int) $this->created_by_user_id === (int) $user->id) {
+            return true;
+        }
+
+        return $this->officers()->where('users.id', $user->id)->exists();
+    }
+
+    /**
+     * Calculate and return unified election statistics.
+     */
+    public function getElectionStats(): array
+    {
+        $totalDPT = $this->eligibleVotersCount();
+        $totalVotes = $this->votes()->count();
+        $turnoutRate = $totalDPT > 0 ? round(($totalVotes / $totalDPT) * 100, 1) : 0;
+        $turnoutPercentage = $totalDPT > 0 ? round(($totalVotes / $totalDPT) * 100, 2) : 0;
+        $nonVoters = max(0, $totalDPT - $totalVotes);
+
+        $this->load(['candidates' => function ($query) {
+            $query->withCount(['votes' => function ($vq) {
+                $vq->where('event_id', $this->id);
+            }])->orderBy('candidate_number', 'asc');
+        }]);
+
+        $candidates = $this->candidates;
+        $candidateStats = [];
+        $leader = null;
+        $maxVotes = -1;
+        $isTie = false;
+
+        foreach ($candidates as $c) {
+            $votesCount = (int) ($c->votes_count ?? 0);
+            $percentage = $totalVotes > 0 ? round(($votesCount / $totalVotes) * 100, 1) : 0;
+
+            $candidateStats[] = [
+                'id' => $c->id,
+                'candidate_id' => $c->id,
+                'number' => $c->candidate_number,
+                'candidate_number' => $c->candidate_number,
+                'chairman' => $c->chairman_name,
+                'vice_chairman' => $c->vice_chairman_name,
+                'name' => $c->name,
+                'display_name' => $c->display_name,
+                'photo' => $c->photo ? (str_starts_with($c->photo, 'http') ? $c->photo : asset($c->photo)) : null,
+                'photo_url' => $c->photo_url,
+                'description' => $c->description,
+                'vision' => $c->vision,
+                'mission' => $c->mission,
+                'votes' => $votesCount,
+                'vote_count' => $votesCount,
+                'votes_count' => $votesCount,
+                'percentage' => $percentage,
+            ];
+
+            if ($votesCount > $maxVotes) {
+                $maxVotes = $votesCount;
+                $leader = $c;
+                $isTie = false;
+            } elseif ($votesCount === $maxVotes && $maxVotes > 0) {
+                $isTie = true;
+            }
+        }
+
+        $winner = ($this->status === 'CLOSED' && !$isTie && $maxVotes > 0) ? $leader : null;
+
+        return [
+            'totalDPT' => $totalDPT,
+            'totalVoters' => $totalDPT,
+            'total_voters' => $totalDPT,
+            'totalVotes' => $totalVotes,
+            'totalVoted' => $totalVotes,
+            'total_voted' => $totalVotes,
+            'turnoutRate' => $turnoutRate,
+            'turnoutPercentage' => $turnoutPercentage,
+            'turnout_percentage' => $turnoutPercentage,
+            'nonVoters' => $nonVoters,
+            'candidateStats' => $candidateStats,
+            'candidates' => $candidateStats,
+            'leader' => $leader,
+            'winner' => $winner,
+            'isTie' => $isTie,
+        ];
+    }
+
+    /**
+     * Generate unique room code.
+     */
+    public static function generateUniqueRoomCode(int $length = 6): string
+    {
+        do {
+            $code = strtoupper(Str::random($length));
+        } while (static::where('room_code', $code)->exists());
+
+        return $code;
+    }
+
+    /**
+     * Generate unique invite token.
+     */
+    public static function generateUniqueInviteToken(int $length = 32): string
+    {
+        do {
+            $token = Str::random($length);
+        } while (static::where('invite_token', $token)->exists());
+
+        return $token;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Voter;
 
+use App\Actions\CastVoteAction;
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Event;
@@ -114,7 +115,7 @@ class VotingController extends Controller
         ]);
     }
 
-    public function vote(Request $request, string $eventId)
+    public function vote(Request $request, string $eventId, CastVoteAction $castVoteAction)
     {
         $validated = $request->validate([
             'candidate_id' => 'required|integer',
@@ -158,51 +159,7 @@ class VotingController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($eventId, $voter, $validated) {
-                // 1. Lock participation record
-                $participation = EventParticipation::where('event_id', $eventId)
-                    ->where('voter_id', $voter->id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (! $participation) {
-                    $participation = EventParticipation::create([
-                        'event_id' => $eventId,
-                        'voter_id' => $voter->id,
-                        'has_voted' => false,
-                    ]);
-                    // Re-lock
-                    $participation = EventParticipation::where('id', $participation->id)->lockForUpdate()->first();
-                }
-
-                // 2. Check double vote
-                if ($participation->has_voted) {
-                    throw new \Exception('Anda sudah pernah memilih pada event ini!');
-                }
-
-                // 3. Verify candidate belongs to event
-                $candidateExists = Candidate::where('id', $validated['candidate_id'])
-                    ->where('event_id', $eventId)
-                    ->exists();
-
-                if (! $candidateExists) {
-                    throw new \Exception('Kandidat tidak valid untuk event ini.');
-                }
-
-                $now = Carbon::now();
-
-                // 4. Insert vote (ANONYMOUS: NO voter_id)
-                Vote::create([
-                    'event_id' => $eventId,
-                    'candidate_id' => $validated['candidate_id'],
-                    'voted_at' => $now,
-                ]);
-
-                // 5. Update participation record
-                $participation->has_voted = true;
-                $participation->voted_at = $now;
-                $participation->save();
-            });
+            $castVoteAction->execute($event, $voter, (int) $validated['candidate_id']);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage(),
@@ -231,33 +188,23 @@ class VotingController extends Controller
             ], 403);
         }
 
-        $candidates = Candidate::where('event_id', $eventId)
-            ->orderBy('candidate_number', 'asc')
-            ->get();
+        $stats = $event->getElectionStats();
 
-        $totalVotes = Vote::where('event_id', $eventId)->count();
-
-        $results = $candidates->map(function ($c) use ($eventId, $totalVotes) {
-            $votesCount = Vote::where('event_id', $eventId)
-                ->where('candidate_id', $c->id)
-                ->count();
-
-            $percentage = $totalVotes > 0 ? round(($votesCount / $totalVotes) * 100, 2) : 0;
-
+        $results = collect($stats['candidates'])->map(function ($c) {
             return [
-                'candidate_id' => $c->id,
-                'candidate_number' => $c->candidate_number,
-                'name' => $c->name,
-                'photo_url' => $c->photo_url,
-                'votes_count' => $votesCount,
-                'percentage' => $percentage,
+                'candidate_id' => $c['candidate_id'],
+                'candidate_number' => $c['candidate_number'],
+                'name' => $c['name'],
+                'photo_url' => $c['photo_url'],
+                'votes_count' => $c['votes_count'],
+                'percentage' => $c['percentage'],
             ];
         });
 
         return response()->json([
             'event_id' => $event->id,
             'title' => $event->title,
-            'total_votes' => $totalVotes,
+            'total_votes' => $stats['totalVotes'],
             'results' => $results,
         ]);
     }

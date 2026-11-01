@@ -142,60 +142,7 @@ class MonitoringController extends Controller
      */
     private function calculateElectionStats(Event $event): array
     {
-        $totalDPT = $event->eligibleVotersCount();
-        $totalVotes = $event->votes()->count();
-        $turnoutRate = $totalDPT > 0 ? round(($totalVotes / $totalDPT) * 100, 1) : 0;
-        $nonVoters = max(0, $totalDPT - $totalVotes);
-
-        $event->load(['candidates' => function ($query) use ($event) {
-            $query->withCount(['votes' => function ($vq) use ($event) {
-                $vq->where('event_id', $event->id);
-            }])->orderBy('candidate_number', 'asc');
-        }]);
-
-        $candidates = $event->candidates;
-        $candidateStats = [];
-        $leader = null;
-        $maxVotes = -1;
-        $isTie = false;
-
-        foreach ($candidates as $c) {
-            $votesCount = (int) ($c->votes_count ?? 0);
-            $percentage = $totalVotes > 0 ? round(($votesCount / $totalVotes) * 100, 1) : 0;
-            
-            $candidateStats[] = [
-                'id' => $c->id,
-                'number' => $c->candidate_number,
-                'chairman' => $c->chairman_name,
-                'vice_chairman' => $c->vice_chairman_name,
-                'display_name' => $c->display_name,
-                'photo' => $c->photo ? (str_starts_with($c->photo, 'http') ? $c->photo : asset($c->photo)) : null,
-                'votes' => $votesCount,
-                'percentage' => $percentage,
-            ];
-
-            if ($votesCount > $maxVotes) {
-                $maxVotes = $votesCount;
-                $leader = $c;
-                $isTie = false;
-            } elseif ($votesCount === $maxVotes && $maxVotes > 0) {
-                $isTie = true;
-            }
-        }
-
-        // Jika seri atau belum ada suara, tandai pemenang
-        $winner = ($event->status === 'CLOSED' && !$isTie && $maxVotes > 0) ? $leader : null;
-
-        return [
-            'totalDPT' => $totalDPT,
-            'totalVotes' => $totalVotes,
-            'turnoutRate' => $turnoutRate,
-            'nonVoters' => $nonVoters,
-            'candidateStats' => $candidateStats,
-            'leader' => $leader,
-            'winner' => $winner,
-            'isTie' => $isTie,
-        ];
+        return $event->getElectionStats();
     }
 
     /**
@@ -203,14 +150,7 @@ class MonitoringController extends Controller
      */
     protected function authorizeEventAccess(Event $event): void
     {
-        $user = Auth::user();
-
-        if ($user && $user->isSuperAdmin()) {
-            return;
-        }
-
-        $isOfficer = $user && $event->officers()->where('users.id', $user->id)->exists();
-        if (!$user || ($event->created_by_user_id !== $user->id && !$isOfficer)) {
+        if (!$event->canBeManagedBy(Auth::user())) {
             abort(403, 'Anda tidak memiliki hak akses untuk memantau agenda pemilihan ini.');
         }
     }

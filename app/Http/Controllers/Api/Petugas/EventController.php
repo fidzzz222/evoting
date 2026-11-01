@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Petugas;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreEventRequest;
+use App\Http\Requests\UpdateEventRequest;
 use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\User;
@@ -13,24 +15,6 @@ use Illuminate\Validation\Rule;
 
 class EventController extends Controller
 {
-    private function generateUniqueRoomCode(): string
-    {
-        do {
-            $code = strtoupper(Str::random(6));
-        } while (Event::where('room_code', $code)->exists());
-
-        return $code;
-    }
-
-    private function generateUniqueInviteToken(): string
-    {
-        do {
-            $token = Str::random(32);
-        } while (Event::where('invite_token', $token)->exists());
-
-        return $token;
-    }
-
     public function index(Request $request)
     {
         Event::syncAllEventStatuses();
@@ -39,18 +23,10 @@ class EventController extends Controller
 
         // SUPER_ADMIN dapat melihat semua event
         // PETUGAS melihat event yang dibuat oleh dirinya sendiri ATAU di mana dirinya menjadi petugas kolaborator (officer)
-        $query = Event::with(['creator', 'officers', 'candidates'])
+        $query = Event::accessibleBy($user)
+            ->with(['creator', 'officers', 'candidates'])
             ->withCount('candidates')
             ->orderBy('id', 'desc');
-
-        if ($user->role !== 'SUPER_ADMIN') {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by_user_id', $user->id)
-                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                      $officerQuery->where('users.id', $user->id);
-                  });
-            });
-        }
 
         $events = $query->get();
 
@@ -73,27 +49,25 @@ class EventController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreEventRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'category' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
-            'room_code' => 'nullable|string|unique:events,room_code',
-            'start_time' => 'nullable|date',
-            'end_time' => 'nullable|date|after_or_equal:start_time',
-        ]);
+        $validated = $request->validated();
 
         $roomCode = ! empty($validated['room_code'])
             ? strtoupper($validated['room_code'])
-            : $this->generateUniqueRoomCode();
+            : Event::generateUniqueRoomCode();
 
-        $inviteToken = $this->generateUniqueInviteToken();
+        $inviteToken = Event::generateUniqueInviteToken();
+
+        $targetScope = $validated['target_scope'] ?? 'ALL';
+        $targetClass = ($targetScope === 'KELAS' && !empty($validated['target_class'])) ? trim($validated['target_class']) : null;
 
         $event = Event::create([
             'created_by_user_id' => $request->user()->id,
             'title' => $validated['title'],
             'category' => $validated['category'] ?? 'KETUA_OSIS',
+            'target_scope' => $targetScope,
+            'target_class' => $targetClass,
             'description' => $validated['description'] ?? null,
             'room_code' => $roomCode,
             'invite_token' => $inviteToken,
@@ -122,21 +96,11 @@ class EventController extends Controller
 
     public function show(Request $request, string $id)
     {
-        $user = $request->user();
-        $query = Event::with(['creator', 'officers', 'candidates' => function ($q) {
-            $q->orderBy('candidate_number', 'asc');
-        }]);
-
-        if ($user->role !== 'SUPER_ADMIN') {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by_user_id', $user->id)
-                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                      $officerQuery->where('users.id', $user->id);
-                  });
-            });
-        }
-
-        $event = $query->findOrFail($id);
+        $event = Event::accessibleBy($request->user())
+            ->with(['creator', 'officers', 'candidates' => function ($q) {
+                $q->orderBy('candidate_number', 'asc');
+            }])
+            ->findOrFail($id);
         $event->syncDynamicStatus();
 
         return response()->json([
@@ -144,30 +108,11 @@ class EventController extends Controller
         ]);
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateEventRequest $request, string $id)
     {
-        $user = $request->user();
-        $query = Event::query();
+        $event = Event::accessibleBy($request->user())->findOrFail($id);
 
-        if ($user->role !== 'SUPER_ADMIN') {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by_user_id', $user->id)
-                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                      $officerQuery->where('users.id', $user->id);
-                  });
-            });
-        }
-
-        $event = $query->findOrFail($id);
-
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'category' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
-            'room_code' => ['nullable', 'string', Rule::unique('events', 'room_code')->ignore($event->id)],
-            'start_time' => 'nullable|date',
-            'end_time' => 'nullable|date|after_or_equal:start_time',
-        ]);
+        $validated = $request->validated();
 
         if (isset($validated['title'])) {
             $event->title = $validated['title'];
@@ -175,6 +120,13 @@ class EventController extends Controller
 
         if (array_key_exists('category', $validated)) {
             $event->category = $validated['category'];
+        }
+
+        if (array_key_exists('target_scope', $validated)) {
+            $event->target_scope = $validated['target_scope'] ?? 'ALL';
+            $event->target_class = ($event->target_scope === 'KELAS' && !empty($validated['target_class'])) ? trim($validated['target_class']) : null;
+        } elseif (array_key_exists('target_class', $validated)) {
+            $event->target_class = $validated['target_class'];
         }
 
         if (array_key_exists('description', $validated)) {
@@ -210,19 +162,7 @@ class EventController extends Controller
 
     public function updateStatus(Request $request, string $id)
     {
-        $user = $request->user();
-        $query = Event::query();
-
-        if ($user->role !== 'SUPER_ADMIN') {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by_user_id', $user->id)
-                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                      $officerQuery->where('users.id', $user->id);
-                  });
-            });
-        }
-
-        $event = $query->findOrFail($id);
+        $event = Event::accessibleBy($request->user())->findOrFail($id);
 
         $validated = $request->validate([
             'status' => ['required', Rule::in(['DRAFT', 'PUBLISHED', 'CLOSED'])],
@@ -276,26 +216,16 @@ class EventController extends Controller
 
     public function destroy(Request $request, string $id)
     {
-        $user = $request->user();
-        $query = Event::query();
-
-        if ($user->role !== 'SUPER_ADMIN') {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by_user_id', $user->id)
-                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                      $officerQuery->where('users.id', $user->id);
-                  });
-            });
-        }
-
-        $event = $query->findOrFail($id);
+        $event = Event::accessibleBy($request->user())->findOrFail($id);
         $eventTitle = $event->title;
 
         // Hapus kandidat berserta foto terkait jika ada
         foreach ($event->candidates as $candidate) {
             if ($candidate->photo_url) {
-                $relativePath = str_replace('/storage/', '', $candidate->photo_url);
-                Storage::disk('public')->delete($relativePath);
+                $relativePath = preg_replace('#^/?storage/#', '', parse_url($candidate->photo_url, PHP_URL_PATH) ?? $candidate->photo_url);
+                if ($relativePath && Storage::disk('public')->exists($relativePath)) {
+                    Storage::disk('public')->delete($relativePath);
+                }
             }
             $candidate->delete();
         }
@@ -323,19 +253,9 @@ class EventController extends Controller
      */
     public function getInviteInfo(Request $request, string $id)
     {
-        $user = $request->user();
-        $query = Event::with('officers');
-
-        if ($user->role !== 'SUPER_ADMIN') {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by_user_id', $user->id)
-                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                      $officerQuery->where('users.id', $user->id);
-                  });
-            });
-        }
-
-        $event = $query->findOrFail($id);
+        $event = Event::accessibleBy($request->user())
+            ->with('officers')
+            ->findOrFail($id);
 
         // Jika invite_token belum ada (misal event lama), generate baru
         if (empty($event->invite_token)) {

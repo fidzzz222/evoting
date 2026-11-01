@@ -35,7 +35,7 @@ class VoterAuthController extends Controller
 
         if (!$event) {
             return back()->withErrors([
-                'room_code' => "Kode bilik suara '{$roomCode}' tidak ditemukan. Mohon periksa kembali kode pemilihan.",
+                'room_code' => "Kode bilik suara '{$roomCode}' tidak ditemukan.",
             ])->withInput();
         }
 
@@ -45,24 +45,24 @@ class VoterAuthController extends Controller
         if ($event->status === 'DRAFT') {
             if ($event->isBeforeStartTime()) {
                 return back()->withErrors([
-                    'room_code' => "Bilik suara '{$event->title}' belum dibuka. Pemilihan dijadwalkan mulai pada {$event->formatted_start_time}.",
+                    'room_code' => "Bilik suara belum dibuka. Jadwal mulai: {$event->formatted_start_time}.",
                 ])->withInput();
             }
 
             return back()->withErrors([
-                'room_code' => "Bilik suara '{$event->title}' belum dibuka oleh panitia (Status: Draft).",
+                'room_code' => "Bilik suara belum dibuka oleh panitia.",
             ])->withInput();
         }
 
         if ($event->status === 'CLOSED' || $event->isAfterEndTime()) {
             return back()->withErrors([
-                'room_code' => "Bilik suara '{$event->title}' telah resmi ditutup karena batas waktu jadwal pemilihan ({$event->formatted_end_time}) telah berakhir.",
+                'room_code' => "Bilik suara telah ditutup ({$event->formatted_end_time}).",
             ])->withInput();
         }
 
         if ($event->isBeforeStartTime()) {
             return back()->withErrors([
-                'room_code' => "Bilik suara '{$event->title}' belum dimulai. Pemilihan dijadwalkan mulai pada {$event->formatted_start_time}.",
+                'room_code' => "Bilik suara belum dimulai. Jadwal mulai: {$event->formatted_start_time}.",
             ])->withInput();
         }
 
@@ -77,7 +77,7 @@ class VoterAuthController extends Controller
 
         if (!$voter->is_active) {
             return back()->withErrors([
-                'identifier' => 'Akun DPT Anda berstatus Nonaktif. Hubungi panitia pemilihan.',
+                'identifier' => 'Akun pemilih nonaktif. Hubungi panitia.',
             ])->withInput();
         }
 
@@ -124,7 +124,7 @@ class VoterAuthController extends Controller
 
         // 4. Direct entry to the voting booth! No agenda catalog, no second room code prompt!
         return redirect()->route('voter.booth', $event->room_code)
-            ->with('success', "Selamat datang di Bilik Suara, {$voter->nama}!");
+            ->with('success', "Bilik suara aktif. Silakan gunakan hak pilih.");
     }
 
     public function logout(Request $request)
@@ -135,9 +135,10 @@ class VoterAuthController extends Controller
         }
 
         Auth::guard('voter')->logout();
+        $request->session()->forget('voter_room_code');
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('voter.login')->with('success', 'Terima kasih telah menggunakan hak suara Anda.');
+        return redirect()->route('voter.login')->with('success', 'Sesi bilik suara selesai.');
     }
 }

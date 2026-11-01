@@ -83,7 +83,7 @@ class UserManagementController extends Controller
         ]);
 
         return redirect()->route('admin.users.index')
-            ->with('success', "Akun {$user->nama} ({$user->role}) berhasil ditambahkan!");
+            ->with('success', "Akun {$user->nama} ({$user->role}) berhasil ditambahkan.");
     }
 
     /**
@@ -105,6 +105,10 @@ class UserManagementController extends Controller
             'password' => 'nullable|string|min:6|confirmed',
             'role' => 'required|in:SUPER_ADMIN,PETUGAS',
         ]);
+
+        if ($user->role === 'SUPER_ADMIN' && $validated['role'] !== 'SUPER_ADMIN' && User::where('role', 'SUPER_ADMIN')->count() <= 1) {
+            return back()->withInput()->with('error', 'Tidak dapat mengubah peran Super Admin terakhir.');
+        }
 
         $data = [
             'nama' => $validated['nama'],
@@ -128,7 +132,7 @@ class UserManagementController extends Controller
         AuditLog::log('USER_UPDATED', "Memperbarui akun {$user->nama} ({$user->email})");
 
         return redirect()->route('admin.users.index')
-            ->with('success', "Data akun {$user->nama} berhasil diperbarui!");
+            ->with('success', "Data akun {$user->nama} berhasil diperbarui.");
     }
 
     /**
@@ -137,7 +141,15 @@ class UserManagementController extends Controller
     public function destroy(User $user)
     {
         if ($user->id === auth()->id()) {
-            return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif.');
+            return back()->with('error', 'Tidak dapat menghapus akun yang sedang aktif digunakan.');
+        }
+
+        if ($user->role === 'SUPER_ADMIN' && User::where('role', 'SUPER_ADMIN')->count() <= 1) {
+            return back()->with('error', 'Tidak dapat menghapus Super Admin terakhir.');
+        }
+
+        if ($user->events()->exists()) {
+            return back()->with('error', "Akun {$user->nama} masih memiliki agenda aktif. Alihkan agenda terlebih dahulu.");
         }
 
         $nama = $user->nama;

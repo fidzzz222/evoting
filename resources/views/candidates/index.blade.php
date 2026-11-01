@@ -23,25 +23,7 @@
         </a>
     </div>
 
-    @if($candidates->count() < 2)
-        <div class="rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-start gap-3">
-                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-200 text-amber-800 font-bold text-xs shrink-0 mt-0.5">!</span>
-                <div>
-                    <p class="font-semibold text-amber-950">Jumlah Paslon belum memenuhi syarat minimal</p>
-                    <p class="text-amber-800 mt-0.5 leading-relaxed">
-                        Pemilihan memerlukan minimal <strong>2 pasangan calon</strong> sebelum agenda dapat dibuka untuk pemungutan suara. Saat ini baru terdaftar <strong>{{ $candidates->count() }} paslon</strong>.
-                    </p>
-                </div>
-            </div>
-            <a 
-                href="{{ route('events.candidates.create', $event) }}" 
-                class="shrink-0 inline-flex items-center px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-colors"
-            >
-                <span>Tambah Paslon #{{ $candidates->count() + 1 }}</span>
-            </a>
-        </div>
-    @endif
+    <x-insufficient-candidates-alert :event="$event" :count="$candidates->count()" />
 
     <!-- Grid Paslon -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

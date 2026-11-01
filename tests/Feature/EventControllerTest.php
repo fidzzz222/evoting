@@ -153,10 +153,31 @@ class EventControllerTest extends TestCase
 
     public function test_admin_can_view_monitoring_page(): void
     {
+        // Event in DRAFT state
         $response = $this->actingAs($this->admin)->get(route('events.monitoring', $this->event));
 
         $response->assertStatus(200);
         $response->assertSee('Monitoring Perolehan Suara');
+        $response->assertSee('Draft');
+
+        // Event in ACTIVE (PUBLISHED + 2 candidates + in schedule) state
+        $this->event->update(['status' => 'PUBLISHED']);
+        Candidate::create(['event_id' => $this->event->id, 'candidate_number' => 1, 'name' => 'Paslon 1']);
+        Candidate::create(['event_id' => $this->event->id, 'candidate_number' => 2, 'name' => 'Paslon 2']);
+
+        $responseActive = $this->actingAs($this->admin)->get(route('events.monitoring', $this->event));
+        $responseActive->assertStatus(200);
+        $responseActive->assertSee('Live');
+        $responseActive->assertSee('Real-time');
+        $responseActive->assertSee('autoPoll: true', false);
+
+        // Event in CLOSED state
+        $this->event->update(['status' => 'CLOSED']);
+        $responseClosed = $this->actingAs($this->admin)->get(route('events.monitoring', $this->event));
+        $responseClosed->assertStatus(200);
+        $responseClosed->assertSee('Selesai');
+        $responseClosed->assertSee('Hasil Akhir');
+        $responseClosed->assertSee('autoPoll: false', false);
     }
 
     public function test_admin_can_delete_event(): void

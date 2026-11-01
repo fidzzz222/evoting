@@ -4,10 +4,56 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Candidate extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Candidate $candidate) {
+            $candidate->deletePhoto();
+        });
+    }
+
+    /**
+     * Upload and store candidate photo, cleaning up prior photo if present.
+     */
+    public function savePhoto($file): string
+    {
+        $this->deletePhoto();
+
+        $path = $file->store('candidates', 'public');
+        $this->photo_url = 'storage/' . $path;
+
+        if ($this->exists) {
+            $this->save();
+        }
+
+        return $this->photo_url;
+    }
+
+    /**
+     * Delete existing candidate photo from public storage.
+     */
+    public function deletePhoto(): void
+    {
+        if (! $this->photo_url) {
+            return;
+        }
+
+        if (str_starts_with($this->photo_url, 'http://') || str_starts_with($this->photo_url, 'https://')) {
+            return;
+        }
+
+        $relativePath = preg_replace('#^/?storage/#', '', $this->photo_url);
+        $relativePath = ltrim($relativePath, '/');
+
+        if ($relativePath && Storage::disk('public')->exists($relativePath)) {
+            Storage::disk('public')->delete($relativePath);
+        }
+    }
 
     protected $fillable = [
         'event_id',

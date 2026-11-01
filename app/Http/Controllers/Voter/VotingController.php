@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Voter;
 
+use App\Actions\CastVoteAction;
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Event;
@@ -60,21 +61,21 @@ class VotingController extends Controller
         $event = Event::where('room_code', $code)->first();
 
         if (!$event) {
-            return back()->with('error', "Kode bilik suara '{$code}' tidak ditemukan. Mohon periksa kembali.");
+            return back()->with('error', "Kode bilik suara '{$code}' tidak ditemukan.");
         }
 
         $event->syncDynamicStatus();
 
         if ($event->status === 'CLOSED' || $event->isAfterEndTime()) {
-            return back()->with('error', "Bilik suara '{$event->title}' telah resmi ditutup karena batas waktu jadwal pemilihan ({$event->formatted_end_time}) telah berakhir.");
+            return back()->with('error', "Bilik suara telah ditutup ({$event->formatted_end_time}).");
         }
 
         if ($event->isBeforeStartTime()) {
-            return back()->with('warning', "Bilik suara '{$event->title}' belum dibuka. Pemilihan dijadwalkan mulai pada {$event->formatted_start_time}.");
+            return back()->with('warning', "Bilik suara belum dibuka. Jadwal mulai: {$event->formatted_start_time}.");
         }
 
         if ($event->status !== 'PUBLISHED') {
-            return back()->with('warning', "Bilik suara '{$event->title}' saat ini berstatus " . $event->status_label . ". Pemilihan hanya dapat diakses saat status Berlangsung (Aktif).");
+            return back()->with('warning', "Bilik suara tidak aktif (Status: {$event->status_label}).");
         }
 
         // If voter is already logged in, go straight to booth
@@ -98,15 +99,15 @@ class VotingController extends Controller
 
         // Check if event is active and within schedule window
         if ($event->status === 'CLOSED' || $event->isAfterEndTime()) {
-            return redirect()->route('voter.login')->with('error', "Bilik suara '{$event->title}' telah resmi ditutup karena batas waktu jadwal pemilihan ({$event->formatted_end_time}) telah berakhir.");
+            return redirect()->route('voter.login')->with('error', "Bilik suara telah ditutup ({$event->formatted_end_time}).");
         }
 
         if ($event->isBeforeStartTime()) {
-            return redirect()->route('voter.login')->with('error', "Bilik suara '{$event->title}' belum dibuka. Pemilihan dijadwalkan mulai pada {$event->formatted_start_time}.");
+            return redirect()->route('voter.login')->with('error', "Bilik suara belum dibuka. Jadwal mulai: {$event->formatted_start_time}.");
         }
 
         if ($event->status !== 'PUBLISHED') {
-            return redirect()->route('voter.login')->with('error', "Pemilihan '{$event->title}' saat ini tidak aktif (Status: {$event->status_label}).");
+            return redirect()->route('voter.login')->with('error', "Pemilihan tidak aktif (Status: {$event->status_label}).");
         }
 
         // Check if voter is eligible for this event's scope
@@ -133,7 +134,7 @@ class VotingController extends Controller
     /**
      * Cast vote with pessimistic locking and transaction safety.
      */
-    public function submitVote(Request $request, string $roomCode)
+    public function submitVote(Request $request, string $roomCode, CastVoteAction $castVoteAction)
     {
         $request->validate([
             'candidate_id' => ['required', 'exists:candidates,id'],
@@ -145,15 +146,15 @@ class VotingController extends Controller
         $event->syncDynamicStatus();
 
         if ($event->status === 'CLOSED' || $event->isAfterEndTime()) {
-            return redirect()->route('voter.login')->with('error', "Maaf, batas waktu pemungutan suara telah berakhir ({$event->formatted_end_time}). Suara Anda tidak dapat dikirim karena bilik telah ditutup secara otomatis.");
+            return redirect()->route('voter.login')->with('error', "Batas waktu pemilihan telah berakhir ({$event->formatted_end_time}).");
         }
 
         if ($event->isBeforeStartTime()) {
-            return redirect()->route('voter.login')->with('error', "Bilik suara belum dibuka. Pemilihan dijadwalkan mulai pada {$event->formatted_start_time}.");
+            return redirect()->route('voter.login')->with('error', "Bilik suara belum dibuka. Jadwal mulai: {$event->formatted_start_time}.");
         }
 
         if ($event->status !== 'PUBLISHED') {
-            return redirect()->route('voter.login')->with('error', 'Pemilihan telah ditutup atau belum aktif.');
+            return redirect()->route('voter.login')->with('error', 'Pemilihan ditutup atau belum aktif.');
         }
 
         if (!$event->isVoterEligible($voter)) {
@@ -161,45 +162,7 @@ class VotingController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($event, $voter, $request) {
-                // 1. Pessimistic Lock on voter participation to prevent double-voting race condition
-                $participation = EventParticipation::where('event_id', $event->id)
-                    ->where('voter_id', $voter->id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($participation && $participation->has_voted) {
-                    throw new \RuntimeException('Anda sudah menggunakan hak suara pada pemilihan ini.');
-                }
-
-                // 2. Pessimistic Lock on candidate
-                $candidate = Candidate::where('event_id', $event->id)
-                    ->where('id', $request->candidate_id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
-
-                // 3. Record participation (Audit DPT who has voted)
-                if ($participation) {
-                    $participation->update([
-                        'has_voted' => true,
-                        'voted_at' => now(),
-                    ]);
-                } else {
-                    EventParticipation::create([
-                        'event_id' => $event->id,
-                        'voter_id' => $voter->id,
-                        'has_voted' => true,
-                        'voted_at' => now(),
-                    ]);
-                }
-
-                // 4. Store completely ANONYMOUS ballot (no voter_id attached)
-                Vote::create([
-                    'event_id' => $event->id,
-                    'candidate_id' => $candidate->id,
-                    'voted_at' => now(),
-                ]);
-            });
+            $castVoteAction->execute($event, $voter, (int) $request->candidate_id);
 
             return redirect()->route('voter.success', $event->room_code);
 
@@ -207,7 +170,7 @@ class VotingController extends Controller
             return redirect()->route('voter.voted', $event->room_code)->with('warning', $e->getMessage());
         } catch (\Throwable $e) {
             report($e);
-            return back()->with('error', 'Terjadi kesalahan sistem saat menyimpan suara Anda. Silakan coba kembali.');
+            return back()->with('error', 'Gagal menyimpan suara. Silakan coba kembali.');
         }
     }
 

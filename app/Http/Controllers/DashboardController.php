@@ -17,35 +17,18 @@ class DashboardController extends Controller
 
         $user = Auth::user();
 
-        // Scope metrics and events based on user role
-        // Super Admin oversees all events; Panitia (Petugas) only sees & manages events they created.
-        if ($user->isSuperAdmin()) {
-            $totalEvents = Event::count();
-            $activeEventsCount = Event::where('status', 'PUBLISHED')->count();
-            $draftEventsCount = Event::where('status', 'DRAFT')->count();
-            $closedEventsCount = Event::where('status', 'CLOSED')->count();
+        // Scope metrics and events based on user role using centralized scope
+        $baseQuery = Event::accessibleBy($user);
 
-            $eventsQuery = Event::with(['candidates', 'creator'])
-                ->withCount(['candidates', 'votes', 'participations']);
-        } else {
-            $baseQuery = Event::where(function ($q) use ($user) {
-                $q->where('created_by_user_id', $user->id)
-                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
-                      $officerQuery->where('users.id', $user->id);
-                  });
-            });
+        $totalEvents = (clone $baseQuery)->count();
+        $activeEventsCount = (clone $baseQuery)->where('status', 'PUBLISHED')->count();
+        $draftEventsCount = (clone $baseQuery)->where('status', 'DRAFT')->count();
+        $closedEventsCount = (clone $baseQuery)->where('status', 'CLOSED')->count();
 
-            $totalEvents = (clone $baseQuery)->count();
-            $activeEventsCount = (clone $baseQuery)->where('status', 'PUBLISHED')->count();
-            $draftEventsCount = (clone $baseQuery)->where('status', 'DRAFT')->count();
-            $closedEventsCount = (clone $baseQuery)->where('status', 'CLOSED')->count();
-
-            $eventsQuery = (clone $baseQuery)
-                ->with(['candidates', 'creator'])
-                ->withCount(['candidates', 'votes', 'participations']);
-        }
-
-        $events = $eventsQuery->orderByRaw("CASE status WHEN 'PUBLISHED' THEN 1 WHEN 'DRAFT' THEN 2 WHEN 'CLOSED' THEN 3 ELSE 4 END")
+        $events = (clone $baseQuery)
+            ->with(['candidates', 'creator'])
+            ->withCount(['candidates', 'votes', 'participations'])
+            ->orderByRaw("CASE status WHEN 'PUBLISHED' THEN 1 WHEN 'DRAFT' THEN 2 WHEN 'CLOSED' THEN 3 ELSE 4 END")
             ->orderBy('created_at', 'desc')
             ->take(6)
             ->get();
