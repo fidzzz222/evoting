@@ -54,7 +54,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($request->filled('password') && ! Hash::check($request->password, $voter->password)) {
+        if ($voter->password && (! $request->filled('password') || ! Hash::check($request->password, $voter->password))) {
             return response()->json([
                 'message' => 'Password tidak valid',
             ], 401);

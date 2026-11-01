@@ -118,7 +118,8 @@ class CandidateControllerTest extends TestCase
             $payload
         );
 
-        $response->assertRedirect(route('events.candidates.index', $this->event));
+        // Paslon pertama akan mengarahkan kembali ke create paslon #2 karena wajib minimal 2 paslon
+        $response->assertRedirect(route('events.candidates.create', $this->event));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('candidates', [
@@ -129,10 +130,48 @@ class CandidateControllerTest extends TestCase
         ]);
     }
 
+    public function test_can_store_second_candidate_and_redirects_to_candidate_index(): void
+    {
+        Candidate::create([
+            'event_id' => $this->event->id,
+            'candidate_number' => 1,
+            'name' => 'Paslon 1',
+        ]);
+
+        $payload = [
+            'candidate_number' => 2,
+            'chairman_name' => 'Calon Kedua',
+            'vice_chairman_name' => 'Wakil Kedua',
+            'vision' => 'Visi 2',
+            'mission' => 'Misi 2',
+        ];
+
+        $response = $this->actingAs($this->admin)->post(
+            route('events.candidates.store', $this->event),
+            $payload
+        );
+
+        // Setelah paslon 2 disimpan, syarat minimal 2 paslon terpenuhi dan diarahkan ke daftar paslon
+        $response->assertRedirect(route('events.candidates.index', $this->event));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('candidates', [
+            'event_id' => $this->event->id,
+            'candidate_number' => 2,
+            'name' => 'Calon Kedua & Wakil Kedua',
+        ]);
+    }
+
     public function test_can_store_single_candidate_without_vice_chairman(): void
     {
-        $payload = [
+        Candidate::create([
+            'event_id' => $this->event->id,
             'candidate_number' => 1,
+            'name' => 'Paslon 1',
+        ]);
+
+        $payload = [
+            'candidate_number' => 2,
             'chairman_name' => 'Muhammad Raihan',
             'vice_chairman_name' => '',
             'vision' => 'Visi tunggal',
@@ -149,7 +188,7 @@ class CandidateControllerTest extends TestCase
 
         $this->assertDatabaseHas('candidates', [
             'event_id' => $this->event->id,
-            'candidate_number' => 1,
+            'candidate_number' => 2,
             'name' => 'Muhammad Raihan',
         ]);
     }
@@ -209,7 +248,7 @@ class CandidateControllerTest extends TestCase
             $payload
         );
 
-        $response->assertRedirect(route('events.candidates.index', $this->event));
+        $response->assertRedirect(route('events.candidates.create', $this->event));
 
         $candidate = Candidate::first();
         $this->assertNotNull($candidate->photo_url);
@@ -284,5 +323,60 @@ class CandidateControllerTest extends TestCase
         $response->assertSessionHas('success');
 
         $this->assertDatabaseMissing('candidates', ['id' => $candidate->id]);
+    }
+
+    public function test_storing_second_candidate_automatically_activates_event_in_scheduled_window(): void
+    {
+        // Event created in setUp() is in scheduled window (start_time: subHour, end_time: addHour) and status DRAFT
+        Candidate::create([
+            'event_id' => $this->event->id,
+            'candidate_number' => 1,
+            'name' => 'Paslon 1',
+        ]);
+
+        $this->assertEquals('DRAFT', $this->event->fresh()->status);
+
+        $payload = [
+            'candidate_number' => 2,
+            'chairman_name' => 'Kandidat 2',
+        ];
+
+        $this->actingAs($this->admin)->post(
+            route('events.candidates.store', $this->event),
+            $payload
+        );
+
+        // Setelah paslon ke-2 terdaftar dan waktu jadwal sedang berjalan, event otomatis PUBLISHED
+        $this->assertEquals('PUBLISHED', $this->event->fresh()->status);
+    }
+
+    public function test_deleting_candidate_reverts_published_event_to_draft_if_under_two_candidates(): void
+    {
+        // Set event ke PUBLISHED dengan 2 kandidat
+        $candidate1 = Candidate::create([
+            'event_id' => $this->event->id,
+            'candidate_number' => 1,
+            'name' => 'Paslon 1',
+        ]);
+
+        $candidate2 = Candidate::create([
+            'event_id' => $this->event->id,
+            'candidate_number' => 2,
+            'name' => 'Paslon 2',
+        ]);
+
+        $this->event->update(['status' => 'PUBLISHED']);
+        $this->assertEquals('PUBLISHED', $this->event->fresh()->status);
+
+        // Hapus salah satu kandidat sehingga hanya tersisa 1 kandidat (< 2)
+        $response = $this->actingAs($this->admin)
+            ->from(route('events.candidates.index', $this->event))
+            ->delete(route('events.candidates.destroy', [$this->event, $candidate2]));
+
+        $response->assertRedirect(route('events.candidates.index', $this->event));
+        $response->assertSessionHas('success');
+
+        // Status event harus otomatis kembali ke DRAFT karena paslon < 2
+        $this->assertEquals('DRAFT', $this->event->fresh()->status);
     }
 }

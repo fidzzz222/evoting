@@ -13,6 +13,8 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        Event::syncAllEventStatuses();
+
         $user = Auth::user();
 
         // Scope metrics and events based on user role
@@ -26,12 +28,19 @@ class DashboardController extends Controller
             $eventsQuery = Event::with(['candidates', 'creator'])
                 ->withCount(['candidates', 'votes', 'participations']);
         } else {
-            $totalEvents = Event::where('created_by_user_id', $user->id)->count();
-            $activeEventsCount = Event::where('created_by_user_id', $user->id)->where('status', 'PUBLISHED')->count();
-            $draftEventsCount = Event::where('created_by_user_id', $user->id)->where('status', 'DRAFT')->count();
-            $closedEventsCount = Event::where('created_by_user_id', $user->id)->where('status', 'CLOSED')->count();
+            $baseQuery = Event::where(function ($q) use ($user) {
+                $q->where('created_by_user_id', $user->id)
+                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
+                      $officerQuery->where('users.id', $user->id);
+                  });
+            });
 
-            $eventsQuery = Event::where('created_by_user_id', $user->id)
+            $totalEvents = (clone $baseQuery)->count();
+            $activeEventsCount = (clone $baseQuery)->where('status', 'PUBLISHED')->count();
+            $draftEventsCount = (clone $baseQuery)->where('status', 'DRAFT')->count();
+            $closedEventsCount = (clone $baseQuery)->where('status', 'CLOSED')->count();
+
+            $eventsQuery = (clone $baseQuery)
                 ->with(['candidates', 'creator'])
                 ->withCount(['candidates', 'votes', 'participations']);
         }

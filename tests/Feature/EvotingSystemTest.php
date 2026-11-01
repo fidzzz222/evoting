@@ -83,7 +83,7 @@ class EvotingSystemTest extends TestCase
 
         $loginResponse = $this->followingRedirects()->get('/');
         $loginResponse->assertStatus(200);
-        $loginResponse->assertSee('Otentikasi Pemilih');
+        $loginResponse->assertSee('Masuk Pemilih');
         $loginResponse->assertDontSee('Sesi Aktif');
         $loginResponse->assertDontSee('Gunakan #');
     }
@@ -228,6 +228,22 @@ class EvotingSystemTest extends TestCase
             'timestamp',
         ]);
         $json->assertJsonPath('total_votes', 1);
+        $json->assertJsonPath('candidates.0.votes', 1);
+        $json->assertJsonPath('candidates.0.percentage', 100);
+        $json->assertJsonPath('candidates.1.votes', 0);
+        $json->assertJsonPath('candidates.1.percentage', 0);
+
+        // Alias endpoint /events/{event}/live-stats
+        $aliasJson = $this->actingAs($this->admin, 'web')
+            ->getJson("/events/{$this->event->id}/live-stats");
+        $aliasJson->assertStatus(200);
+        $aliasJson->assertJsonPath('candidates.0.votes', 1);
+
+        // Monitoring view contains votes in stats JSON
+        $view = $this->actingAs($this->admin, 'web')
+            ->get(route('events.monitoring', $this->event));
+        $view->assertStatus(200);
+        $view->assertSee('"votes":1');
 
         // Berita Acara PDF download
         $pdf = $this->actingAs($this->admin, 'web')
@@ -332,6 +348,17 @@ class EvotingSystemTest extends TestCase
             'created_by_user_id' => $this->admin->id,
         ]);
 
+        Candidate::create([
+            'event_id' => $teacherEvent->id,
+            'candidate_number' => 1,
+            'name' => 'Calon Guru 1',
+        ]);
+        Candidate::create([
+            'event_id' => $teacherEvent->id,
+            'candidate_number' => 2,
+            'name' => 'Calon Guru 2',
+        ]);
+
         $teacherVoter = Voter::create([
             'nama' => 'Pak Guru Budi',
             'identifier' => '19850101',
@@ -417,5 +444,108 @@ class EvotingSystemTest extends TestCase
             'created_by_user_id' => $this->admin->id,
         ]);
         $this->assertEquals(1, $guruEvent->eligibleVotersCount());
+    }
+
+    public function test_voter_cannot_login_if_event_schedule_is_in_the_future(): void
+    {
+        $futureEvent = Event::create([
+            'title' => 'Pemilihan Masa Depan',
+            'room_code' => 'FUTR01',
+            'status' => 'PUBLISHED',
+            'category' => 'OSIS',
+            'target_scope' => 'ALL',
+            'start_time' => Carbon::now()->addDay(),
+            'end_time' => Carbon::now()->addDays(2),
+            'created_by_user_id' => $this->admin->id,
+        ]);
+
+        $response = $this->post(route('voter.login.submit'), [
+            'identifier' => $this->voter->identifier,
+            'room_code' => 'FUTR01',
+        ]);
+
+        $response->assertSessionHasErrors('room_code');
+        $this->assertGuest('voter');
+    }
+
+    public function test_voter_cannot_login_if_event_schedule_has_expired(): void
+    {
+        $pastEvent = Event::create([
+            'title' => 'Pemilihan Waktu Lampau',
+            'room_code' => 'PAST01',
+            'status' => 'PUBLISHED',
+            'category' => 'OSIS',
+            'target_scope' => 'ALL',
+            'start_time' => Carbon::now()->subDays(2),
+            'end_time' => Carbon::now()->subHour(),
+            'created_by_user_id' => $this->admin->id,
+        ]);
+
+        $response = $this->post(route('voter.login.submit'), [
+            'identifier' => $this->voter->identifier,
+            'room_code' => 'PAST01',
+        ]);
+
+        $response->assertSessionHasErrors('room_code');
+        $this->assertEquals('CLOSED', $pastEvent->fresh()->status);
+        $this->assertGuest('voter');
+    }
+
+    public function test_voter_cannot_submit_vote_if_event_expires_while_in_booth(): void
+    {
+        // Setup event that ends in 1 second, then expired
+        $expiringEvent = Event::create([
+            'title' => 'Pemilihan Habis Waktu',
+            'room_code' => 'EXPBOOTH',
+            'status' => 'PUBLISHED',
+            'category' => 'OSIS',
+            'target_scope' => 'ALL',
+            'start_time' => Carbon::now()->subHour(),
+            'end_time' => Carbon::now()->subSecond(),
+            'created_by_user_id' => $this->admin->id,
+        ]);
+
+        $candidate = Candidate::create([
+            'event_id' => $expiringEvent->id,
+            'candidate_number' => 1,
+            'name' => 'Calon Expired',
+        ]);
+
+        $response = $this->actingAs($this->voter, 'voter')
+            ->post(route('voter.vote.submit', $expiringEvent->room_code), [
+                'candidate_id' => $candidate->id,
+            ]);
+
+        $response->assertRedirect(route('voter.login'));
+        $response->assertSessionHas('error');
+        $this->assertEquals(0, Vote::where('event_id', $expiringEvent->id)->count());
+        $this->assertEquals('CLOSED', $expiringEvent->fresh()->status);
+    }
+
+    public function test_expired_draft_or_published_event_displays_ditutup_and_not_draft(): void
+    {
+        $expiredEvent = Event::create([
+            'title' => 'Pemilihan Kadaluarsa',
+            'room_code' => 'EXPD01',
+            'category' => 'OSIS',
+            'status' => 'DRAFT',
+            'start_time' => Carbon::now()->subHours(5),
+            'end_time' => Carbon::now()->subMinutes(10),
+            'created_by_user_id' => $this->admin->id,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('events.show', $expiredEvent));
+        $response->assertOk();
+        $response->assertSee('Ditutup');
+        $response->assertDontSee('Draft / Persiapan');
+        $this->assertEquals('CLOSED', $expiredEvent->fresh()->status);
+
+        $indexResponse = $this->actingAs($this->admin)->get(route('events.index'));
+        $indexResponse->assertOk();
+        $indexResponse->assertSee('Ditutup');
+
+        $dashResponse = $this->actingAs($this->admin)->get(route('dashboard'));
+        $dashResponse->assertOk();
+        $dashResponse->assertSee('Ditutup');
     }
 }

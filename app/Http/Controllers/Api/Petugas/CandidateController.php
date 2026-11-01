@@ -49,6 +49,8 @@ class CandidateController extends Controller
             'mission' => $validated['mission'] ?? null,
         ]);
 
+        $event->syncDynamicStatus();
+
         return response()->json([
             'message' => 'Kandidat berhasil ditambahkan',
             'data' => $candidate,
@@ -125,7 +127,9 @@ class CandidateController extends Controller
             }
         })->findOrFail($id);
 
+        $event = $candidate->event;
         $candidate->delete();
+        $event->syncDynamicStatus();
 
         return response()->json([
             'message' => 'Kandidat berhasil dihapus',

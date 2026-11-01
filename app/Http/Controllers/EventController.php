@@ -18,12 +18,20 @@ class EventController extends Controller
      */
     public function index(Request $request)
     {
+        // Sinkronisasi status seluruh agenda secara otomatis sesuai jadwal mulai & selesai
+        Event::syncAllEventStatuses();
+
         $user = Auth::user();
         $query = Event::with(['creator', 'candidates'])
             ->withCount(['candidates', 'votes', 'participations']);
 
         if (!$user->isSuperAdmin()) {
-            $query->where('created_by_user_id', $user->id);
+            $query->where(function ($q) use ($user) {
+                $q->where('created_by_user_id', $user->id)
+                  ->orWhereHas('officers', function ($officerQuery) use ($user) {
+                      $officerQuery->where('users.id', $user->id);
+                  });
+            });
         }
 
         if ($request->filled('search')) {
@@ -75,8 +83,16 @@ class EventController extends Controller
             'target_class' => ['nullable', 'string', 'max:255', 'required_if:target_scope,KELAS'],
             'description' => ['nullable', 'string'],
             'room_code' => ['required', 'string', 'size:6', 'alpha_num', 'unique:events,room_code'],
-            'start_time' => ['nullable', 'date'],
-            'end_time' => ['nullable', 'date', 'after_or_equal:start_time'],
+            'start_time' => ['required', 'date'],
+            'end_time' => ['required', 'date', 'after:start_time'],
+        ], [
+            'start_time.required' => 'Jadwal mulai pemilihan wajib diisi.',
+            'start_time.date' => 'Format jadwal mulai tidak valid.',
+            'end_time.required' => 'Jadwal selesai pemilihan wajib diisi.',
+            'end_time.date' => 'Format jadwal selesai tidak valid.',
+            'end_time.after' => 'Jadwal selesai harus setelah jadwal mulai.',
+            'target_class.required_if' => 'Nama kelas target wajib diisi jika jangkauan pemilihan adalah spesifik kelas.',
+            'room_code.size' => 'Kode bilik suara harus tepat 6 karakter.',
         ]);
 
         $event = Event::create([
@@ -93,14 +109,25 @@ class EventController extends Controller
             'end_time' => $request->end_time,
         ]);
 
+        $event->syncDynamicStatus();
+
+        // Hubungkan seluruh pengguna role SUPER_ADMIN ke dalam kepanitiaan event (event_officers)
+        // agar seluruh administrator selalu terdaftar dan memiliki akses penuh ke agenda ini
+        $superAdminIds = User::where('role', 'SUPER_ADMIN')
+            ->where('id', '!=', Auth::id())
+            ->pluck('id');
+        if ($superAdminIds->isNotEmpty()) {
+            $event->officers()->syncWithoutDetaching($superAdminIds);
+        }
+
         AuditLog::log(
             'EVENT_CREATED',
             "Membuat agenda pemilihan baru: {$event->title} (#{$event->room_code}) [Target: {$event->target_scope_label}]",
             ['event_id' => $event->id, 'title' => $event->title, 'target_scope' => $event->target_scope, 'target_class' => $event->target_class]
         );
 
-        return redirect()->route('events.show', $event)
-            ->with('success', "Agenda pemilihan '{$event->title}' berhasil dibuat. Silakan tambahkan kandidat pasangan calon.");
+        return redirect()->route('events.candidates.create', $event)
+            ->with('success', "Agenda pemilihan '{$event->title}' berhasil dibuat. Silakan daftarkan pasangan calon (wajib minimal 2 paslon).");
     }
 
     /**
@@ -109,6 +136,7 @@ class EventController extends Controller
     public function show(Event $event)
     {
         $this->authorizeEventAccess($event);
+        $event->syncDynamicStatus();
 
         $event->load(['creator', 'officers', 'candidates' => function ($q) {
             $q->orderBy('candidate_number', 'asc');
@@ -127,6 +155,7 @@ class EventController extends Controller
     public function edit(Event $event)
     {
         $this->authorizeEventAccess($event);
+        $event->syncDynamicStatus();
         $availableClasses = Voter::where('type', 'SISWA')
             ->whereNotNull('kelas')
             ->where('kelas', '!=', '')
@@ -151,8 +180,16 @@ class EventController extends Controller
             'target_class' => ['nullable', 'string', 'max:255', 'required_if:target_scope,KELAS'],
             'description' => ['nullable', 'string'],
             'room_code' => ['required', 'string', 'size:6', 'alpha_num', 'unique:events,room_code,' . $event->id],
-            'start_time' => ['nullable', 'date'],
-            'end_time' => ['nullable', 'date'],
+            'start_time' => ['required', 'date'],
+            'end_time' => ['required', 'date', 'after:start_time'],
+        ], [
+            'start_time.required' => 'Jadwal mulai pemilihan wajib diisi.',
+            'start_time.date' => 'Format jadwal mulai tidak valid.',
+            'end_time.required' => 'Jadwal selesai pemilihan wajib diisi.',
+            'end_time.date' => 'Format jadwal selesai tidak valid.',
+            'end_time.after' => 'Jadwal selesai harus setelah jadwal mulai.',
+            'target_class.required_if' => 'Nama kelas target wajib diisi jika jangkauan pemilihan adalah spesifik kelas.',
+            'room_code.size' => 'Kode bilik suara harus tepat 6 karakter.',
         ]);
 
         $event->update([
@@ -165,6 +202,8 @@ class EventController extends Controller
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
         ]);
+
+        $event->syncDynamicStatus();
 
         AuditLog::log(
             'EVENT_UPDATED',
@@ -191,11 +230,18 @@ class EventController extends Controller
         $newStatus = $request->status;
 
         // If activating, make sure there are at least 2 candidates
-        if ($newStatus === 'PUBLISHED' && $event->candidates()->count() < 2) {
-            return back()->with('error', 'Pemilihan membutuhkan minimal 2 pasangan calon sebelum dapat diaktifkan.');
+        if ($newStatus === 'PUBLISHED') {
+            if ($event->candidates()->count() < 2) {
+                return back()->with('error', 'Pemilihan membutuhkan minimal 2 pasangan calon sebelum dapat diaktifkan.');
+            }
+
+            if ($event->isAfterEndTime()) {
+                return back()->with('error', "Pemilihan tidak dapat diaktifkan karena batas jadwal selesai ({$event->formatted_end_time}) telah terlewati. Silakan edit jadwal selesai terlebih dahulu.");
+            }
         }
 
         $event->update(['status' => $newStatus]);
+        $event->syncDynamicStatus();
 
         AuditLog::log(
             'EVENT_STATUS_CHANGED',
@@ -219,8 +265,8 @@ class EventController extends Controller
 
         $user = Auth::user();
 
-        // Check if already creator or officer
-        if ($event->created_by_user_id === $user->id || $event->officers()->where('users.id', $user->id)->exists()) {
+        // Check if already creator or officer or super admin
+        if ($user->isSuperAdmin() || $event->created_by_user_id === $user->id || $event->officers()->where('users.id', $user->id)->exists()) {
             return redirect()->route('events.show', $event)->with('info', 'Anda sudah terdaftar sebagai petugas pada pemilihan ini.');
         }
 
@@ -278,7 +324,8 @@ class EventController extends Controller
             return;
         }
 
-        if ($event->created_by_user_id !== $user->id) {
+        $isOfficer = $event->officers()->where('users.id', $user->id)->exists();
+        if ($event->created_by_user_id !== $user->id && !$isOfficer) {
             abort(403, 'Anda tidak memiliki hak akses untuk mengelola agenda pemilihan ini.');
         }
     }

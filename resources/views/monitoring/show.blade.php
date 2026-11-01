@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Live Monitoring: ' . $event->title])
+@extends('layouts.app', ['title' => 'Monitoring Suara: ' . $event->title])
 
 @section('content')
 <div class="space-y-7" x-data="monitoringApp({{ json_encode($event->id) }}, {{ json_encode($stats) }})" x-init="initCharts()">
@@ -13,89 +13,58 @@
                     <span>Detail Agenda</span>
                 </a>
                 <span class="text-slate-300">•</span>
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                     {{ $event->category_label }}
                 </span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                <span>Live Quick Count & Monitoring</span>
-                <span 
-                    x-show="autoPoll" 
-                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800"
-                >
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Live Aktif</span>
-                </span>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                <span>Monitoring Perolehan Suara</span>
+                @if($event->status === 'ACTIVE')
+                    <span
+                        x-show="autoPoll"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800"
+                    >
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Live</span>
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700">
+                        <span>Selesai</span>
+                    </span>
+                @endif
             </h1>
             <p class="text-xs text-slate-500 mt-1.5 font-medium leading-relaxed">
-                Agenda: <strong class="text-slate-800">{{ $event->title }}</strong> &bull; Pembaruan Terakhir: <span class="font-mono font-bold text-slate-700" x-text="lastUpdated">{{ now()->format('H:i:s') }}</span>
+                Agenda: <strong class="text-slate-800">{{ $event->title }}</strong> &bull; Pembaruan Terakhir: <span class="font-mono font-bold tabular-nums text-slate-700" x-text="lastUpdated">{{ now()->format('H:i:s') }}</span>
             </p>
         </div>
 
         <!-- Action Tools with Consistent Buttons -->
         <div class="flex flex-wrap items-center gap-2.5">
             <!-- Export CSV -->
-            <a 
-                href="{{ route('events.report.csv', $event) }}" 
-                class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-300 flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+            <a
+                href="{{ route('events.report.csv', $event) }}"
+                class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-300 flex items-center shadow-xs transition-colors cursor-pointer"
             >
-                <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
                 <span>Ekspor CSV</span>
             </a>
 
             <!-- Berita Acara PDF -->
-            <a 
-                href="{{ route('events.report.pdf', $event) }}" 
+            <a
+                href="{{ route('events.report.pdf', $event) }}"
                 target="_blank"
-                class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs flex items-center gap-2 shadow-xs border border-slate-800 transition-colors cursor-pointer"
+                class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs flex items-center shadow-xs border border-slate-900 transition-colors cursor-pointer"
             >
-                <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
                 <span>Cetak Berita Acara (PDF)</span>
             </a>
         </div>
     </div>
 
-    <!-- Pemenang Banner (Jika Pemilihan CLOSED) Solid Agency-Grade -->
-    @if($event->status === 'CLOSED' && $stats['winner'])
-        <div class="bg-slate-900 rounded-2xl p-6 sm:p-7 text-white border border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="flex items-center gap-5">
-                <div class="w-14 h-14 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0">
-                    <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">
-                        Hasil Akhir Resmi • Paslon Terpilih
-                    </span>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold mt-1 text-white">
-                        Paslon #{{ $stats['winner']->candidate_number }} - {{ $stats['winner']->display_name }}
-                    </h2>
-                    <p class="text-xs text-slate-300 mt-1 font-medium">
-                        Meraih perolehan terbanyak dengan <strong class="text-amber-400">{{ $stats['winner']->votes_count }} suara sah</strong>
-                    </p>
-                </div>
-            </div>
-            <a 
-                href="{{ route('events.report.pdf', $event) }}" 
-                target="_blank"
-                class="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors shadow-xs shrink-0"
-            >
-                Unduh Lembar Pengesahan PDF &rarr;
-            </a>
-        </div>
-    @endif
-
     <!-- Top Stats Row -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <x-stat-card 
-            title="Total DPT Terdaftar" 
-            :value="$stats['totalDPT']" 
-            helper="Daftar Pemilih Tetap aktif"
+        <x-stat-card
+            title="Total Daftar Pemilih"
+            :value="$stats['totalDPT']"
+            x-value="stats.totalDPT"
             color="blue"
         >
             <x-slot:icon>
@@ -105,10 +74,10 @@
             </x-slot:icon>
         </x-stat-card>
 
-        <x-stat-card 
-            title="Total Suara Masuk" 
-            :value="$stats['totalVotes']" 
-            helper="Surat suara sah terverifikasi"
+        <x-stat-card
+            title="Total Suara Masuk"
+            :value="$stats['totalVotes']"
+            x-value="stats.totalVotes"
             color="emerald"
         >
             <x-slot:icon>
@@ -118,10 +87,10 @@
             </x-slot:icon>
         </x-stat-card>
 
-        <x-stat-card 
-            title="Tingkat Partisipasi" 
-            :value="$stats['turnoutRate'] . '%'" 
-            helper="Persentase DPT yang telah memilih"
+        <x-stat-card
+            title="Tingkat Partisipasi"
+            :value="$stats['turnoutRate'] . '%'"
+            x-value="stats.turnoutRate + '%'"
             color="amber"
         >
             <x-slot:icon>
@@ -131,10 +100,10 @@
             </x-slot:icon>
         </x-stat-card>
 
-        <x-stat-card 
-            title="Belum Memilih" 
-            :value="$stats['nonVoters']" 
-            helper="Sisa hak suara yang belum masuk"
+        <x-stat-card
+            title="Belum Memilih"
+            :value="$stats['nonVoters']"
+            x-value="stats.nonVoters"
             color="rose"
         >
             <x-slot:icon>
@@ -152,11 +121,10 @@
             <div>
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100">
                     <div>
-                        <h3 class="text-base font-bold text-slate-900 tracking-tight">Perbandingan Suara Paslon</h3>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">Jumlah suara riil yang diperoleh masing-masing pasangan calon</p>
+                        <h3 class="text-base font-bold text-slate-900 tracking-tight">Perolehan Suara Paslon</h3>
                     </div>
-                    <span class="text-xs font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
-                        Real-Time Count
+                    <span class="text-xs font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
+                        {{ $event->status === 'ACTIVE' ? 'Real-time' : 'Hasil Akhir' }}
                     </span>
                 </div>
 
@@ -170,8 +138,7 @@
         <div class="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
             <div>
                 <div class="pb-4 border-b border-slate-100">
-                    <h3 class="text-base font-bold text-slate-900 tracking-tight">Proporsi Partisipasi</h3>
-                    <p class="text-xs text-slate-500 font-medium mt-0.5">Persentase suara masuk vs sisa hak suara</p>
+                    <h3 class="text-base font-bold text-slate-900 tracking-tight">Partisipasi Pemilih</h3>
                 </div>
 
                 <div class="mt-6 h-56 sm:h-64 relative flex items-center justify-center">
@@ -185,14 +152,14 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-slate-900"></span>
                         <span class="text-slate-500 font-medium">Sudah Memilih</span>
                     </div>
-                    <span class="block font-extrabold text-slate-900 text-base" x-text="stats.totalVotes">{{ $stats['totalVotes'] }}</span>
+                    <span class="block font-bold tabular-nums text-slate-900 text-base" x-text="stats.totalVotes">{{ $stats['totalVotes'] }}</span>
                 </div>
                 <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                     <div class="flex items-center justify-center gap-1.5 mb-1">
                         <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
                         <span class="text-slate-500 font-medium">Belum Memilih</span>
                     </div>
-                    <span class="block font-extrabold text-slate-900 text-base" x-text="stats.nonVoters">{{ $stats['nonVoters'] }}</span>
+                    <span class="block font-bold tabular-nums text-slate-900 text-base" x-text="stats.nonVoters">{{ $stats['nonVoters'] }}</span>
                 </div>
             </div>
         </div>
@@ -202,11 +169,8 @@
     <div class="space-y-4">
         <div>
             <h3 class="text-lg font-bold text-slate-900 tracking-tight">
-                Rincian Perolehan Setiap Pasangan Calon
+                Rincian Perolehan Paslon
             </h3>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">
-                Statistik perolehan suara detail dan persentase kuorum per kandidat
-            </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -215,11 +179,11 @@
                     <!-- Top Ribbon -->
                     <div>
                         <div class="flex items-center justify-between mb-4">
-                            <span class="w-9 h-9 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs">
+                            <span class="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center shadow-xs">
                                 #<span x-text="candidate.number"></span>
                             </span>
                             <div class="text-right">
-                                <span class="text-2xl font-black text-slate-900 tabular-nums" x-text="candidate.percentage + '%'"></span>
+                                <span class="text-2xl font-bold tabular-nums text-slate-900" x-text="candidate.percentage + '%'"></span>
                             </div>
                         </div>
 
@@ -243,11 +207,11 @@
                     <div class="pt-4 border-t border-slate-100">
                         <div class="flex items-center justify-between text-xs mb-2 font-semibold">
                             <span class="text-slate-500">Perolehan Suara</span>
-                            <span class="text-slate-900 font-mono font-bold" x-text="candidate.votes + ' Suara'"></span>
+                            <span class="text-slate-900 font-mono font-bold tabular-nums" x-text="candidate.votes + ' Suara'"></span>
                         </div>
                         <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200/50">
-                            <div 
-                                class="bg-slate-900 h-full rounded-full transition-all duration-500" 
+                            <div
+                                class="bg-slate-900 h-full rounded-full transition-all duration-500"
                                 :style="'width: ' + candidate.percentage + '%'"
                             ></div>
                         </div>
@@ -261,48 +225,52 @@
 @push('scripts')
 <script>
 function monitoringApp(eventId, initialStats) {
+    let barChart = null;
+    let doughnutChart = null;
+
     return {
         eventId: eventId,
         stats: initialStats,
         lastUpdated: '{{ now()->format('H:i:s') }}',
-        autoPoll: true,
+        autoPoll: {{ $event->status === 'ACTIVE' ? 'true' : 'false' }},
         pollInterval: null,
-        barChart: null,
-        doughnutChart: null,
 
         initCharts() {
             if (typeof Chart !== 'undefined') {
-                Chart.defaults.font.family = "'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif";
+                Chart.defaults.font.family = "'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif";
                 Chart.defaults.color = '#64748b';
                 Chart.defaults.font.size = 11;
             }
             this.setupBarChart();
             this.setupDoughnutChart();
-            this.startPolling();
+            if ('{{ $event->status }}' === 'ACTIVE') {
+                this.startPolling();
+            }
         },
 
         setupBarChart() {
             const el = document.getElementById('barChartCanvas');
-            if (!el) return;
-            const ctx = el.getContext('2d');
-            const labels = this.stats.candidateStats.map(c => '#' + c.number + ' ' + c.chairman);
-            const data = this.stats.candidateStats.map(c => c.votes);
+            if (!el || typeof Chart === 'undefined') return;
 
-            this.barChart = new Chart(ctx, {
+            const existingChart = Chart.getChart(el);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+
+            const ctx = el.getContext('2d');
+            const candidates = (this.stats && Array.isArray(this.stats.candidateStats)) ? this.stats.candidateStats : [];
+            const labels = candidates.map(c => '#' + c.number + ' ' + (c.chairman || c.display_name));
+            const data = candidates.map(c => c.votes);
+
+            barChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
                         label: 'Jumlah Suara Sah',
                         data: data,
-                        backgroundColor: [
-                            '#0f172a',
-                            '#2563eb',
-                            '#475569',
-                            '#0d9488',
-                            '#64748b',
-                            '#334155',
-                        ],
+                        backgroundColor: '#1e293b',
+                        hoverBackgroundColor: '#0f172a',
                         borderRadius: 8,
                         borderSkipped: false,
                         maxBarThickness: 48,
@@ -353,14 +321,20 @@ function monitoringApp(eventId, initialStats) {
 
         setupDoughnutChart() {
             const el = document.getElementById('doughnutChartCanvas');
-            if (!el) return;
+            if (!el || typeof Chart === 'undefined') return;
+
+            const existingChart = Chart.getChart(el);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+
             const ctx = el.getContext('2d');
-            this.doughnutChart = new Chart(ctx, {
+            doughnutChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Sudah Memilih', 'Belum Memilih'],
                     datasets: [{
-                        data: [this.stats.totalVotes, this.stats.nonVoters],
+                        data: [this.stats ? this.stats.totalVotes : 0, this.stats ? this.stats.nonVoters : 0],
                         backgroundColor: [
                             '#0f172a',
                             '#e2e8f0',
@@ -393,20 +367,25 @@ function monitoringApp(eventId, initialStats) {
         },
 
         updateCharts() {
-            if (this.barChart) {
-                this.barChart.data.labels = this.stats.candidateStats.map(c => '#' + c.number + ' ' + c.chairman);
-                this.barChart.data.datasets[0].data = this.stats.candidateStats.map(c => c.votes);
-                this.barChart.update();
+            const bar = barChart || (typeof Chart !== 'undefined' ? Chart.getChart('barChartCanvas') : null);
+            if (bar && this.stats && Array.isArray(this.stats.candidateStats)) {
+                bar.data.labels = this.stats.candidateStats.map(c => '#' + c.number + ' ' + (c.chairman || c.display_name));
+                bar.data.datasets[0].data = this.stats.candidateStats.map(c => c.votes);
+                bar.data.datasets[0].backgroundColor = '#1e293b';
+                bar.data.datasets[0].hoverBackgroundColor = '#0f172a';
+                bar.update();
             }
 
-            if (this.doughnutChart) {
-                this.doughnutChart.data.datasets[0].data = [this.stats.totalVotes, this.stats.nonVoters];
-                this.doughnutChart.update();
+            const doughnut = doughnutChart || (typeof Chart !== 'undefined' ? Chart.getChart('doughnutChartCanvas') : null);
+            if (doughnut && this.stats) {
+                doughnut.data.datasets[0].data = [this.stats.totalVotes, this.stats.nonVoters];
+                doughnut.update();
             }
         },
 
         fetchLatestStats() {
-            axios.get(`/events/${this.eventId}/live-stats`)
+            if (typeof axios === 'undefined') return;
+            axios.get('{{ route('events.live-stats', $event) }}')
                 .then(response => {
                     const data = response.data;
                     this.stats.totalDPT = data.total_dpt;

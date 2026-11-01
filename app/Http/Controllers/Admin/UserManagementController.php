@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -69,6 +70,13 @@ class UserManagementController extends Controller
             'role' => $validated['role'],
         ]);
 
+        if ($user->role === 'SUPER_ADMIN') {
+            $eventIds = Event::pluck('id')->all();
+            if (!empty($eventIds)) {
+                $user->assignedEvents()->syncWithoutDetaching($eventIds);
+            }
+        }
+
         AuditLog::log('USER_CREATED', "Membuat akun {$user->role}: {$user->nama} ({$user->email})", [
             'created_user_id' => $user->id,
             'role' => $user->role,
@@ -109,6 +117,13 @@ class UserManagementController extends Controller
         }
 
         $user->update($data);
+
+        if ($user->role === 'SUPER_ADMIN') {
+            $eventIds = Event::pluck('id')->all();
+            if (!empty($eventIds)) {
+                $user->assignedEvents()->syncWithoutDetaching($eventIds);
+            }
+        }
 
         AuditLog::log('USER_UPDATED', "Memperbarui akun {$user->nama} ({$user->email})");
 

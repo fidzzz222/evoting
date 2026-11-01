@@ -97,6 +97,7 @@ Route::middleware('auth:web')->group(function () {
     // Live Monitoring & Reports
     Route::get('events/{event}/monitoring', [MonitoringController::class, 'show'])->name('events.monitoring');
     Route::get('events/{event}/monitoring/live-stats', [MonitoringController::class, 'liveStats'])->name('events.live-stats');
+    Route::get('events/{event}/live-stats', [MonitoringController::class, 'liveStats']);
     Route::get('events/{event}/report/pdf', [MonitoringController::class, 'downloadPdf'])->name('events.report.pdf');
     Route::get('events/{event}/report/csv', [MonitoringController::class, 'exportCsv'])->name('events.report.csv');
 

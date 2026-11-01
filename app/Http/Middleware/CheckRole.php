@@ -22,7 +22,7 @@ class CheckRole
                 $allowedRoles[] = trim($subRole);
             }
         }
-
+        
         $user = $request->user() ?? Auth::guard('web')->user();
 
         if (! $user) {

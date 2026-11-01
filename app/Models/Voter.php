@@ -70,6 +70,11 @@ class Voter extends Authenticatable
         return $this->type === 'GURU' ? 'Dewan Guru / Staff' : 'Siswa / Pemilih DPT';
     }
 
+    public function getTypeLabelAttribute(): string
+    {
+        return $this->type === 'GURU' ? 'Guru / Staff' : 'Siswa';
+    }
+
     public function getVoterTypeAttribute(): string
     {
         return (string) $this->type;

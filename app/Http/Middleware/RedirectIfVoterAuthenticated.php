@@ -18,11 +18,13 @@ class RedirectIfVoterAuthenticated
     {
         if (Auth::guard('voter')->check()) {
             $roomCode = session('voter_room_code');
-            if ($roomCode && ($event = \App\Models\Event::where('room_code', $roomCode)->where('status', 'PUBLISHED')->first())) {
+            if ($roomCode && ($event = \App\Models\Event::where('room_code', $roomCode)->where('status', 'PUBLISHED')->first()) && $event->isOngoing()) {
                 return redirect()->route('voter.booth', $event->room_code);
             }
 
-            $activeEvent = \App\Models\Event::where('status', 'PUBLISHED')->latest()->first();
+            $activeEvent = \App\Models\Event::where('status', 'PUBLISHED')->latest()->get()->first(function ($e) {
+                return $e->isOngoing();
+            });
             if ($activeEvent) {
                 return redirect()->route('voter.booth', $activeEvent->room_code);
             }

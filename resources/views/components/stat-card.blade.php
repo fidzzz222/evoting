@@ -6,6 +6,7 @@
     'icon' => null,
     'color' => 'blue',
     'trend' => null,
+    'xValue' => null,
 ])
 
 @php
@@ -15,8 +16,8 @@
 <div {{ $attributes->merge(['class' => 'bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs transition-colors relative overflow-hidden flex flex-col justify-between']) }}>
     <div class="flex items-start justify-between gap-3">
         <div class="space-y-1">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">{{ $title }}</span>
-            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">{{ $title }}</span>
+            <div class="text-2xl sm:text-3xl font-bold tabular-nums text-slate-900 tracking-tight" @if($xValue) x-text="{{ $xValue }}" @endif>
                 {{ $value }}
             </div>
         </div>
@@ -40,7 +41,7 @@
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
             @endif
             @if($trend)
-                <span class="font-bold text-emerald-600">{{ $trend }}</span>
+                <span class="font-semibold text-emerald-600">{{ $trend }}</span>
             @endif
             <span>{{ $subText }}</span>
         </div>

@@ -8,24 +8,18 @@
             <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
                 Audit Trail & Log Keamanan
             </h1>
-            <p class="text-xs text-slate-500 mt-1">
-                Catatan immutable seluruh aktivitas sistem, autentikasi, mutasi data, dan penegakan integritas bilik suara.
-            </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
             <!-- Clear Cache Tool -->
             <form action="{{ route('admin.logs.clear-cache') }}" method="POST" onsubmit="return confirm('Bersihkan seluruh cache aplikasi (config, route, views)?')">
                 @csrf
-                <button 
-                    type="submit" 
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-amber-50 hover:border-amber-200 hover:text-amber-800 border border-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                <button
+                    type="submit"
+                    class="inline-flex items-center px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
                     title="Pembersihan cache Laravel optimize:clear"
                 >
-                    <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span>Bersihkan Cache</span>
+                    Bersihkan Cache
                 </button>
             </form>
 
@@ -33,15 +27,12 @@
             <form action="{{ route('admin.logs.prune') }}" method="POST" onsubmit="return confirm('Hapus audit log yang lebih lama dari 30 hari?')">
                 @csrf
                 <input type="hidden" name="days" value="30">
-                <button 
-                    type="submit" 
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                <button
+                    type="submit"
+                    class="inline-flex items-center px-3.5 py-2 rounded-xl bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
                     title="Hapus riwayat log lama untuk efisiensi penyimpanan database"
                 >
-                    <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    <span>Prune Log (>30 Hari)</span>
+                    Prune Log (>30 Hari)
                 </button>
             </form>
         </div>
@@ -49,55 +40,61 @@
 
     <!-- Quick Stats Overview -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <x-stat-card 
-            title="Total Audit Trail" 
-            :value="number_format($totalLogs)" 
-            subtitle="Seluruh rekaman aktivitas sistem"
-            color="blue"
-            icon='<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>'
+        <x-stat-card
+            title="Total Audit Trail"
+            :value="number_format($totalLogs)"
+            color="slate"
+            icon='<svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" /></svg>'
         />
 
-        <x-stat-card 
-            title="Aktivitas Hari Ini" 
-            :value="number_format($todayLogs)" 
-            subtitle="Interaksi tercatat hari ini"
-            color="emerald"
-            icon='<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+        <x-stat-card
+            title="Aktivitas Hari Ini"
+            :value="number_format($todayLogs)"
+            color="slate"
+            icon='<svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><polyline points="12 6 12 12 16 14" /></svg>'
         />
 
-        <x-stat-card 
-            title="Keamanan & Mutasi" 
-            :value="number_format($securityEvents)" 
-            subtitle="Autentikasi, modifikasi & event kritis"
-            color="rose"
-            icon='<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
+        <x-stat-card
+            title="Keamanan"
+            :value="number_format($securityEvents)"
+            color="slate"
+            icon='<svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>'
         />
     </div>
 
     <!-- Filter & Search Toolbar -->
-    <x-card class="p-4">
+    <x-card>
         <form method="GET" action="{{ route('admin.logs.index') }}" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
             <div class="sm:col-span-6">
+                <label for="search" class="block text-xs font-medium text-slate-700 mb-1.5">
+                    Cari Catatan Log
+                </label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.35-4.35" />
                         </svg>
                     </span>
-                    <input 
-                        type="text" 
-                        name="search" 
-                        value="{{ $search ?? '' }}" 
-                        placeholder="Cari deskripsi aktivitas atau alamat IP..." 
-                        class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-colors"
+                    <input
+                        type="text"
+                        id="search"
+                        name="search"
+                        value="{{ $search ?? '' }}"
+                        placeholder="Cari deskripsi aktivitas atau alamat IP..."
+                        class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-colors"
                     />
                 </div>
             </div>
 
             <div class="sm:col-span-4">
-                <select 
-                    name="action" 
-                    class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-colors bg-white"
+                <label for="action" class="block text-xs font-medium text-slate-700 mb-1.5">
+                    Kategori Aksi
+                </label>
+                <select
+                    id="action"
+                    name="action"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-colors bg-white"
                 >
                     <option value="">Semua Kategori Aksi</option>
                     @foreach($actionTypes as $type)
@@ -108,24 +105,19 @@
                 </select>
             </div>
 
-            <div class="sm:col-span-2 flex items-center gap-2">
-                <button 
-                    type="submit" 
-                    class="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors text-center shadow-xs cursor-pointer"
+            <div class="sm:col-span-2 flex items-end gap-2">
+                <button
+                    type="submit"
+                    class="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white text-xs font-semibold transition-colors text-center shadow-xs cursor-pointer border border-slate-900"
                 >
                     Filter
                 </button>
                 @if(!empty($search) || !empty($action))
-                    <a 
-                        href="{{ route('admin.logs.index') }}" 
-                        class="px-2.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 text-xs font-semibold transition-colors inline-flex items-center gap-1 shadow-xs"
-                        title="Reset Filter"
-                        aria-label="Reset Filter"
+                    <a
+                        href="{{ route('admin.logs.index') }}"
+                        class="px-2.5 py-2 text-xs text-slate-500 hover:text-slate-800 font-medium transition-colors"
                     >
-                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        <span>Reset</span>
+                        Reset
                     </a>
                 @endif
             </div>
@@ -133,11 +125,11 @@
     </x-card>
 
     <!-- Logs Table -->
-    <x-card :padding="false">
+    <x-card :noPadding="true">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                    <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-medium text-xs">
                         <th class="py-3 px-6">Waktu Kejadian</th>
                         <th class="py-3 px-6">Aksi & Kategori</th>
                         <th class="py-3 px-6">Aktor / Pengguna</th>
@@ -150,23 +142,19 @@
                         @php
                             $actionStyle = match(true) {
                                 str_contains($log->action, 'DELETE') || str_contains($log->action, 'PRUNE') => [
-                                    'badge' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                    'badge' => 'bg-rose-50 text-rose-700 border-rose-200/80',
                                     'dot' => 'bg-rose-500',
                                 ],
                                 str_contains($log->action, 'VOTE') => [
-                                    'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                    'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
                                     'dot' => 'bg-emerald-500',
                                 ],
-                                str_contains($log->action, 'LOGIN') || str_contains($log->action, 'AUTH') => [
-                                    'badge' => 'bg-blue-50 text-blue-700 border-blue-200',
-                                    'dot' => 'bg-blue-600',
-                                ],
                                 str_contains($log->action, 'UPDATE') || str_contains($log->action, 'STATUS') => [
-                                    'badge' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                    'badge' => 'bg-amber-50 text-amber-700 border-amber-200/80',
                                     'dot' => 'bg-amber-500',
                                 ],
                                 default => [
-                                    'badge' => 'bg-slate-50 text-slate-700 border-slate-200',
+                                    'badge' => 'bg-slate-100 text-slate-700 border-slate-200/80',
                                     'dot' => 'bg-slate-400',
                                 ]
                             };
@@ -174,17 +162,17 @@
                         <tr class="hover:bg-slate-50/80 transition-colors">
                             <!-- Waktu -->
                             <td class="py-3.5 px-6 whitespace-nowrap">
-                                <div class="font-mono text-xs font-semibold text-slate-800">
+                                <div class="text-xs font-medium text-slate-800 tabular-nums">
                                     {{ $log->created_at->format('d/m/Y H:i:s') }}
                                 </div>
-                                <div class="text-[11px] text-slate-400 font-medium">
+                                <div class="text-xs text-slate-500 font-normal">
                                     {{ $log->created_at->diffForHumans() }}
                                 </div>
                             </td>
 
                             <!-- Aksi -->
                             <td class="py-3.5 px-6 whitespace-nowrap">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-mono font-bold uppercase {{ $actionStyle['badge'] }}">
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-mono font-medium {{ $actionStyle['badge'] }}">
                                     <span class="w-1.5 h-1.5 rounded-full {{ $actionStyle['dot'] }}"></span>
                                     {{ $log->action }}
                                 </span>
@@ -193,43 +181,43 @@
                             <!-- Aktor -->
                             <td class="py-3.5 px-6 whitespace-nowrap">
                                 @if($log->user_type === 'USER' && $log->user)
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 border border-blue-200 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-7 h-7 rounded-lg {{ $log->user->role === 'SUPER_ADMIN' ? 'bg-slate-900 text-white border border-slate-800' : 'bg-slate-100 text-slate-700 border border-slate-200' }} flex items-center justify-center font-bold text-xs uppercase shrink-0 shadow-2xs">
                                             {{ substr($log->user->nama ?? $log->actor_name, 0, 1) }}
                                         </div>
                                         <div>
-                                            <div class="font-bold text-slate-900 leading-snug">
+                                            <div class="font-semibold text-slate-900 leading-snug">
                                                 {{ $log->user->nama ?? $log->actor_name }}
                                             </div>
-                                            <div class="text-[10px] text-slate-500 font-mono">
-                                                {{ $log->user->role ?? $log->actor_role }}
+                                            <div class="text-xs text-slate-500 font-normal">
+                                                {{ $log->user->role === 'SUPER_ADMIN' ? 'Administrator Sistem' : 'Panitia Pelaksana' }}
                                             </div>
                                         </div>
                                     </div>
                                 @elseif($log->user_type === 'VOTER' && $log->voter)
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center font-bold text-xs uppercase shrink-0 shadow-2xs">
                                             {{ substr($log->voter->nama ?? $log->actor_name, 0, 1) }}
                                         </div>
                                         <div>
-                                            <div class="font-bold text-slate-900 leading-snug">
+                                            <div class="font-semibold text-slate-900 leading-snug">
                                                 {{ $log->voter->nama ?? $log->actor_name }}
                                             </div>
-                                            <div class="text-[10px] text-slate-500 font-mono">
-                                                NISN: {{ $log->voter->identifier }}
+                                            <div class="text-xs text-slate-500 font-normal">
+                                                NISN: <span class="font-mono tabular-nums">{{ $log->voter->identifier }}</span>
                                             </div>
                                         </div>
                                     </div>
                                 @else
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center font-bold text-xs uppercase shrink-0 shadow-2xs">
                                             S
                                         </div>
                                         <div>
-                                            <div class="font-bold text-slate-700 leading-snug">
+                                            <div class="font-semibold text-slate-700 leading-snug">
                                                 {{ $log->actor_name }}
                                             </div>
-                                            <div class="text-[10px] text-slate-400 font-mono">
+                                            <div class="text-xs text-slate-500 font-normal">
                                                 {{ $log->actor_role }}
                                             </div>
                                         </div>
@@ -239,18 +227,18 @@
 
                             <!-- Deskripsi -->
                             <td class="py-3.5 px-6">
-                                <div class="text-slate-800 font-medium max-w-md break-words leading-relaxed text-xs">
+                                <div class="text-slate-700 font-normal max-w-md wrap-break-word leading-relaxed text-xs">
                                     {{ $log->description }}
                                 </div>
                             </td>
 
                             <!-- IP & Metadata -->
                             <td class="py-3.5 px-6 whitespace-nowrap">
-                                <div class="font-mono text-xs text-slate-700">
-                                    <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{{ $log->ip_address ?? '127.0.0.1' }}</span>
+                                <div>
+                                    <span class="font-mono text-xs text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded border border-slate-200/60 tabular-nums">{{ $log->ip_address ?? '127.0.0.1' }}</span>
                                 </div>
                                 @if($log->user_agent)
-                                    <div class="text-[10px] text-slate-400 truncate max-w-[160px] mt-1" title="{{ $log->user_agent }}">
+                                    <div class="text-xs text-slate-400 truncate max-w-40 mt-1" title="{{ $log->user_agent }}">
                                         {{ Str::limit($log->user_agent, 28) }}
                                     </div>
                                 @endif
@@ -260,8 +248,12 @@
                         <tr>
                             <td colspan="5" class="py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
-                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                        <line x1="16" y1="13" x2="8" y2="13" />
+                                        <line x1="16" y1="17" x2="8" y2="17" />
+                                        <line x1="10" y1="9" x2="8" y2="9" />
                                     </svg>
                                 </div>
                                 <p class="text-sm font-semibold text-slate-600">Belum ada riwayat audit log ditemukan</p>
@@ -274,7 +266,7 @@
         </div>
 
         @if($logs->hasPages())
-            <div class="p-4 border-t border-slate-200">
+            <div class="p-4 sm:px-6 border-t border-slate-200 bg-slate-50/40">
                 {{ $logs->links() }}
             </div>
         @endif

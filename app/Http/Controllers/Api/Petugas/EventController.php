@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Petugas;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -32,6 +33,8 @@ class EventController extends Controller
 
     public function index(Request $request)
     {
+        Event::syncAllEventStatuses();
+
         $user = $request->user();
 
         // SUPER_ADMIN dapat melihat semua event
@@ -51,30 +54,8 @@ class EventController extends Controller
 
         $events = $query->get();
 
-        // Auto-update status berdasarkan waktu
-        $now = now();
         foreach ($events as $event) {
-            $updated = false;
-
-            // Jika status DRAFT dan waktu mulai sudah tercapai, otomatis PUBLISHED
-            if ($event->status === 'DRAFT' && $event->start_time) {
-                if ($now->greaterThanOrEqualTo($event->start_time)) {
-                    $event->status = 'PUBLISHED';
-                    $updated = true;
-                }
-            }
-
-            // Jika status PUBLISHED dan ada end_time, cek apakah sudah waktunya selesai
-            if ($event->status === 'PUBLISHED' && $event->end_time) {
-                if ($now->greaterThan($event->end_time)) {
-                    $event->status = 'CLOSED';
-                    $updated = true;
-                }
-            }
-
-            if ($updated) {
-                $event->save();
-            }
+            $event->syncDynamicStatus();
         }
 
         // Pagination setelah update
@@ -121,6 +102,13 @@ class EventController extends Controller
             'end_time' => $validated['end_time'] ?? null,
         ]);
 
+        $event->syncDynamicStatus();
+
+        $superAdminIds = User::where('role', 'SUPER_ADMIN')->pluck('id')->all();
+        if (!empty($superAdminIds)) {
+            $event->officers()->syncWithoutDetaching($superAdminIds);
+        }
+
         AuditLog::log('CREATE_EVENT', "Membuat event baru '{$event->title}' (Kode Room: {$event->room_code})", [
             'event_id' => $event->id,
             'title' => $event->title,
@@ -149,6 +137,7 @@ class EventController extends Controller
         }
 
         $event = $query->findOrFail($id);
+        $event->syncDynamicStatus();
 
         return response()->json([
             'data' => $event,
@@ -205,6 +194,7 @@ class EventController extends Controller
         }
 
         $event->save();
+        $event->syncDynamicStatus();
 
         AuditLog::log('UPDATE_EVENT', "Memperbarui data event '{$event->title}'", [
             'event_id' => $event->id,
@@ -240,6 +230,15 @@ class EventController extends Controller
         ]);
 
         $newStatus = $validated['status'];
+
+        // Jika mengubah status menjadi PUBLISHED, wajib memiliki minimal 2 kandidat terdaftar
+        if ($newStatus === 'PUBLISHED' && $event->candidates()->count() < 2) {
+            return response()->json([
+                'message' => 'Event belum dapat diaktifkan karena belum memiliki minimal 2 pasangan calon terdaftar.',
+                'candidates_count' => $event->candidates()->count(),
+                'min_candidates_required' => 2,
+            ], 422);
+        }
 
         // Jika membuka kembali event yang sudah CLOSED, wajib isi end_time baru
         if ($event->status === 'CLOSED' && $newStatus === 'PUBLISHED') {

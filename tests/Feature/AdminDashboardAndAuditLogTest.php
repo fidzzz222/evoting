@@ -117,30 +117,30 @@ class AdminDashboardAndAuditLogTest extends TestCase
         $response->assertDontSee('Daftar Pemilih Tetap');
         $response->assertDontSee('Total Suara Masuk');
 
-        // Instead, dashboard shows 4 lifecycle cards and panitia workflow guide
+        // Instead, dashboard shows 4 lifecycle cards
         $response->assertSee('Total Agenda');
         $response->assertSee('Bilik Suara Aktif');
-        $response->assertSee('Draft & Persiapan');
+        $response->assertSee('Draft');
         $response->assertSee('Pemilihan Selesai');
-        $response->assertSee('Panduan Operasional Pemilihan Mandiri');
+        $response->assertDontSee('Panduan Operasional Pemilihan Mandiri');
     }
 
-    public function test_panitia_navbar_does_not_contain_master_dpt_pemilih_while_admin_does(): void
+    public function test_panitia_navbar_does_not_contain_data_pemilih_while_admin_does(): void
     {
-        // Panitia sidebar must NOT contain Master DPT Pemilih
+        // Panitia sidebar must NOT contain Data Pemilih
         $panitiaResponse = $this->actingAs($this->petugas, 'web')
             ->get(route('admin.dashboard'));
 
         $panitiaResponse->assertStatus(200);
-        $panitiaResponse->assertDontSee('Master DPT Pemilih');
+        $panitiaResponse->assertDontSee('Data Pemilih');
         $panitiaResponse->assertSee('Panel Panitia');
 
-        // Super admin sidebar MUST contain Master DPT Pemilih
+        // Super admin sidebar MUST contain Data Pemilih
         $adminResponse = $this->actingAs($this->superAdmin, 'web')
             ->get(route('admin.dashboard'));
 
         $adminResponse->assertStatus(200);
-        $adminResponse->assertSee('Master DPT Pemilih');
+        $adminResponse->assertSee('Data Pemilih');
         $adminResponse->assertSee('Panel Administrator');
     }
 
@@ -223,7 +223,7 @@ class AdminDashboardAndAuditLogTest extends TestCase
             ->get(route('admin.logs.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Audit Trail & Log Keamanan', false);
+        $response->assertSee('Audit Trail & Log', false);
         $response->assertSee('Panitia Pemilihan');
         $response->assertSee('Ahmad Siswa');
     }

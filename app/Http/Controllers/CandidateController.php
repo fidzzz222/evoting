@@ -36,8 +36,9 @@ class CandidateController extends Controller
 
         // Calculate next candidate number automatically
         $nextNumber = ($event->candidates()->max('candidate_number') ?? 0) + 1;
+        $existingCandidates = $event->candidates()->orderBy('candidate_number', 'asc')->get();
 
-        return view('candidates.create', compact('event', 'nextNumber'));
+        return view('candidates.create', compact('event', 'nextNumber', 'existingCandidates'));
     }
 
     /**
@@ -99,8 +100,28 @@ class CandidateController extends Controller
             ['event_id' => $event->id, 'candidate_id' => $candidate->id]
         );
 
+        $totalCandidates = $event->candidates()->count();
+
+        // Cek sinkronisasi status event (jika waktu jadwal aktif dan paslon >= 2, otomatis aktif)
+        $previousStatus = $event->status;
+        $event->syncDynamicStatus();
+        $event->refresh();
+
+        // Alur bertahap & wajib: jika paslon masih kurang dari 2 (syarat wajib belum terpenuhi),
+        // atau jika user secara eksplisit memilih simpan & tambah paslon berikutnya
+        if ($request->input('action') === 'add_another' || $totalCandidates < 2) {
+            $nextNumber = ($event->candidates()->max('candidate_number') ?? 0) + 1;
+            return redirect()->route('events.candidates.create', $event)
+                ->with('success', "Pasangan calon #{$candidate->candidate_number} ({$candidate->name}) berhasil disimpan. Silakan lanjutkan mendaftarkan Pasangan Calon #{$nextNumber} (wajib minimal 2 paslon).");
+        }
+
+        $statusMsg = "Syarat minimal 2 paslon telah terpenuhi!";
+        if ($previousStatus === 'DRAFT' && $event->status === 'PUBLISHED') {
+            $statusMsg .= " Agenda pemilihan telah otomatis dibuka dan aktif sesuai jadwal yang sedang berjalan.";
+        }
+
         return redirect()->route('events.candidates.index', $event)
-            ->with('success', "Pasangan calon #{$candidate->candidate_number} berhasil didaftarkan.");
+            ->with('success', "Pasangan calon #{$candidate->candidate_number} ({$candidate->name}) berhasil didaftarkan. {$statusMsg}");
     }
 
     /**
@@ -221,7 +242,16 @@ class CandidateController extends Controller
             ['event_id' => $event->id]
         );
 
-        return back()->with('success', "Pasangan calon #{$num} berhasil dihapus.");
+        $previousStatus = $event->status;
+        $event->syncDynamicStatus();
+        $event->refresh();
+
+        $msg = "Pasangan calon #{$num} berhasil dihapus.";
+        if ($previousStatus === 'PUBLISHED' && $event->status === 'DRAFT') {
+            $msg .= " Status agenda dikembalikan ke DRAFT karena jumlah paslon kurang dari 2 (syarat minimal).";
+        }
+
+        return back()->with('success', $msg);
     }
 
     /**

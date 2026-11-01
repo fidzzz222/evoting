@@ -209,6 +209,14 @@ class ApiEndpointsTest extends TestCase
             'mission' => 'Misi MPK',
         ]);
 
+        Candidate::create([
+            'event_id' => $event->id,
+            'candidate_number' => 2,
+            'name' => 'Kandidat Kedua MPK',
+            'vision' => 'Visi MPK 2',
+            'mission' => 'Misi MPK 2',
+        ]);
+
         $voterToken = $this->voter->createToken('voter_token')->plainTextToken;
 
         // 1. Voter joins booth by room code

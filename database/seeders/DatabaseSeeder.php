@@ -50,7 +50,7 @@ class DatabaseSeeder extends Seeder
             ['identifier' => '102403', 'nama' => 'Citra Lestari', 'kelas' => 'XII IPS 2', 'type' => 'SISWA'],
             ['identifier' => '102404', 'nama' => 'Dwi Handayani', 'kelas' => 'XI IPA 2', 'type' => 'SISWA'],
             ['identifier' => '102405', 'nama' => 'Eko Prasetyo', 'kelas' => 'XI IPS 1', 'type' => 'SISWA'],
-            ['identifier' => '102406', 'nama' => 'Farhan Maulana', 'kelas' => 'X-1', 'type' => 'SISWA'],
+            ['identifier' => '406', 'nama' => 'Farhan Maulana', 'kelas' => 'X-1', 'type' => 'SISWA'],
             ['identifier' => '102407', 'nama' => 'Gita Gutawa Putri', 'kelas' => 'X-2', 'type' => 'SISWA'],
             ['identifier' => '102408', 'nama' => 'Hendra Saputra', 'kelas' => 'X-3', 'type' => 'SISWA'],
             ['identifier' => '102409', 'nama' => 'Indah Permatasari', 'kelas' => 'XI IPA 1', 'type' => 'SISWA'],
@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
         // 3. Seed Main Election Event (Pemilihan Ketua OSIS)
         $now = Carbon::now();
         $eventOsis = Event::create([
-            'created_by_user_id' => $superAdmin->id,
+            'created_by_user_id' => $petugas1->id,
             'title' => 'Pemilihan Ketua & Wakil Ketua OSIS 2026/2027',
             'category' => 'KETUA_OSIS',
             'description' => 'Gunakan hak suara Anda untuk memilih pemimpin OSIS masa depan SMA Negeri 1 yang amanah, kreatif, dan inspiratif. Suara Anda menentukan masa depan sekolah!',
@@ -81,9 +81,8 @@ class DatabaseSeeder extends Seeder
             'status' => 'PUBLISHED',
         ]);
 
-        // Attach Petugas as officer to event
-        $eventOsis->officers()->attach($petugas1->id);
-        $eventOsis->officers()->attach($petugas2->id);
+        // Attach Super Admin as officer to event so Admin has full access
+        $eventOsis->officers()->attach($superAdmin->id);
 
         // 4. Seed Candidates for Event OSIS
         $candidate1 = Candidate::create([
@@ -147,7 +146,7 @@ class DatabaseSeeder extends Seeder
 
         // 6. Seed Scheduled/Draft Event (MPK)
         $eventMpk = Event::create([
-            'created_by_user_id' => $superAdmin->id,
+            'created_by_user_id' => $petugas2->id,
             'title' => 'Pemilihan Ketua Majelis Perwakilan Kelas (MPK)',
             'category' => 'KETUA_MPK',
             'description' => 'Musyawarah pemilihan pimpinan perwakilan kelas untuk memonitoring aspirasi legislatif siswa.',
@@ -158,7 +157,8 @@ class DatabaseSeeder extends Seeder
             'status' => 'DRAFT',
         ]);
 
-        $eventMpk->officers()->attach($petugas2->id);
+        // Attach Super Admin as officer to event so Admin has full access
+        $eventMpk->officers()->attach($superAdmin->id);
 
         // 7. Seed Audit Logs
         AuditLog::create([
@@ -174,9 +174,9 @@ class DatabaseSeeder extends Seeder
 
         AuditLog::create([
             'user_type' => 'USER',
-            'user_id' => $superAdmin->id,
-            'user_name' => $superAdmin->nama,
-            'user_role' => $superAdmin->role,
+            'user_id' => $petugas1->id,
+            'user_name' => $petugas1->nama,
+            'user_role' => $petugas1->role,
             'action' => 'CREATE_EVENT',
             'description' => "Event '{$eventOsis->title}' dibuat dan dipublikasikan.",
             'ip_address' => '127.0.0.1',

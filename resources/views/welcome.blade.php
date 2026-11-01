@@ -6,16 +6,15 @@
     <div class="text-center max-w-3xl mx-auto space-y-5">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-bold uppercase tracking-wider shadow-2xs">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Demokrasi Digital Sekolah &bull; LUBER JURDIL
         </div>
 
-        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight leading-[1.15]">
             Suara Anda, <br class="hidden sm:inline">
             <span class="text-blue-600">Masa Depan Sekolah</span> Kita.
         </h1>
-        
+
         <p class="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
-            Platform pemungutan suara elektronik modern, transparan, dan akuntabel. Dirancang fleksibel untuk 
+            Platform pemungutan suara elektronik modern, transparan, dan akuntabel. Dirancang fleksibel untuk
             <span class="font-semibold text-slate-800">Siswa, Guru, dan Seluruh Warga Sekolah</span> dengan jaminan kerahasiaan dan integritas suara mutlak.
         </p>
 
@@ -57,17 +56,17 @@
         <form action="{{ route('voter.room.join') }}" method="POST" class="flex flex-col sm:flex-row gap-2.5">
             @csrf
             <div class="relative flex-1">
-                <input 
-                    type="text" 
-                    name="room_code" 
-                    maxlength="6" 
-                    placeholder="CONTOH: OSIS26" 
+                <input
+                    type="text"
+                    name="room_code"
+                    maxlength="6"
+                    placeholder="CONTOH: OSIS26"
                     required
                     class="w-full px-4 py-3 rounded-xl border border-slate-300 text-center uppercase tracking-widest font-mono text-base font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                 />
             </div>
-            <button type="submit" class="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white font-bold text-xs tracking-wide shadow-xs transition-all shrink-0 cursor-pointer">
-                Buka Bilik &rarr;
+            <button type="submit" class="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs tracking-wide shadow-xs transition-colors shrink-0 cursor-pointer">
+                Buka Bilik
             </button>
         </form>
     </div>
@@ -75,8 +74,8 @@
     <!-- Multi-Role Flexibility Section -->
     <div class="space-y-6">
         <div class="text-center max-w-xl mx-auto">
-            <span class="text-xs font-bold text-blue-600 uppercase tracking-widest">Sistem Pemilihan Terbuka</span>
-            <h2 class="text-2xl font-black text-slate-900 tracking-tight mt-1">Fleksibel untuk Semua Warga Sekolah</h2>
+            <span class="text-xs font-semibold text-blue-600 uppercase tracking-widest">Sistem Pemilihan Terbuka</span>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight mt-1">Fleksibel untuk Semua Warga Sekolah</h2>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">Didesain khusus untuk mengakomodasi berbagai skenario pemilihan di lingkungan sekolah</p>
         </div>
 
@@ -137,7 +136,7 @@
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Agenda Pemilihan Aktif</h2>
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Agenda Pemilihan Aktif</h2>
                     <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Pemilihan yang sedang berlangsung saat ini di sekolah</p>
                 </div>
                 <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
@@ -148,7 +147,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($activeEvents as $event)
-                    <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-slate-300 transition-colors flex flex-col justify-between group">
+                    <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-slate-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between gap-2 mb-2">
                                 <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">
@@ -159,7 +158,7 @@
                                 </span>
                             </div>
 
-                            <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-2">
+                            <h3 class="text-base font-bold text-slate-900 mb-2">
                                 {{ $event->title }}
                             </h3>
                             <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
@@ -175,8 +174,8 @@
                                 {{ $event->candidates()->count() }} Paslon
                             </span>
 
-                            <a href="{{ route('voter.login', ['room_code' => $event->room_code]) }}" class="font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                                Masuk Bilik &rarr;
+                            <a href="{{ route('voter.login', ['room_code' => $event->room_code]) }}" class="font-semibold text-blue-600 hover:text-blue-800">
+                                Masuk Bilik
                             </a>
                         </div>
                     </div>

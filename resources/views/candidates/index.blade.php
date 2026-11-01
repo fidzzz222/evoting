@@ -4,27 +4,44 @@
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <a href="{{ route('events.show', $event) }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors mb-2">
-                &larr; Kembali ke Detail Agenda
+            <a href="{{ route('events.show', $event) }}" class="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors mb-2">
+                Detail Agenda
             </a>
             <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
                 Kelola Pasangan Calon
             </h1>
             <p class="text-xs text-slate-500 mt-1">
-                Agenda: <strong>{{ $event->title }}</strong> ({{ $candidates->count() }} Terdaftar)
+                Agenda: <strong>{{ $event->title }}</strong> &bull; {{ $candidates->count() }} Paslon
             </p>
         </div>
 
         <a 
             href="{{ route('events.candidates.create', $event) }}" 
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-xs border border-slate-800 transition-colors"
+            class="inline-flex items-center px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs shadow-xs border border-slate-900 transition-colors"
         >
-            <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            <span>Tambah Paslon Baru</span>
+            <span>Tambah Paslon</span>
         </a>
     </div>
+
+    @if($candidates->count() < 2)
+        <div class="rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-200 text-amber-800 font-bold text-xs shrink-0 mt-0.5">!</span>
+                <div>
+                    <p class="font-semibold text-amber-950">Jumlah Paslon belum memenuhi syarat minimal</p>
+                    <p class="text-amber-800 mt-0.5 leading-relaxed">
+                        Pemilihan memerlukan minimal <strong>2 pasangan calon</strong> sebelum agenda dapat dibuka untuk pemungutan suara. Saat ini baru terdaftar <strong>{{ $candidates->count() }} paslon</strong>.
+                    </p>
+                </div>
+            </div>
+            <a 
+                href="{{ route('events.candidates.create', $event) }}" 
+                class="shrink-0 inline-flex items-center px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-colors"
+            >
+                <span>Tambah Paslon #{{ $candidates->count() + 1 }}</span>
+            </a>
+        </div>
+    @endif
 
     <!-- Grid Paslon -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -32,8 +49,8 @@
             <x-candidate-card :candidate="$candidate" :showActions="true">
                 <div class="w-full flex items-center justify-between pt-2 border-t border-slate-100">
                     <div class="text-xs">
-                        <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Total Perolehan</span>
-                        <span class="text-base font-bold text-slate-900 font-mono">{{ $candidate->votes_count }} Suara</span>
+                        <span class="text-slate-400 block text-[10px] uppercase font-semibold tracking-wider">Perolehan</span>
+                        <span class="text-base font-bold tabular-nums text-slate-900 font-mono">{{ $candidate->votes_count }} Suara</span>
                     </div>
                     <div class="flex items-center gap-1.5">
                         <a 
@@ -63,16 +80,13 @@
                 </div>
                 <h3 class="text-base font-bold text-slate-800 mb-1">Belum Ada Pasangan Calon</h3>
                 <p class="text-xs text-slate-500 mb-4 max-w-sm mx-auto">
-                    Daftarkan pasangan calon Ketua dan Wakil atau kandidat mandiri untuk memulai pemilihan.
+                    Daftarkan pasangan calon untuk agenda pemilihan ini.
                 </p>
                 <a 
                     href="{{ route('events.candidates.create', $event) }}" 
-                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-xs border border-slate-800 transition-colors"
+                    class="inline-flex items-center px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs shadow-xs border border-slate-900 transition-colors"
                 >
-                    <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>Daftarkan Paslon Pertama</span>
+                    <span>Tambah Paslon</span>
                 </a>
             </div>
         @endforelse

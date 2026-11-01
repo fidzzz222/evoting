@@ -56,4 +56,13 @@ class Candidate extends Model
     {
         return $this->photo_url;
     }
+
+    public function getVotesCountAttribute(): int
+    {
+        if (array_key_exists('votes_count', $this->attributes)) {
+            return (int) $this->attributes['votes_count'];
+        }
+
+        return (int) ($this->relationLoaded('votes') ? $this->votes->count() : $this->votes()->count());
+    }
 }

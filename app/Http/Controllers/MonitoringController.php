@@ -18,10 +18,7 @@ class MonitoringController extends Controller
     public function show(Event $event)
     {
         $this->authorizeEventAccess($event);
-
-        $event->load(['candidates' => function ($query) {
-            $query->orderBy('candidate_number', 'asc');
-        }]);
+        $event->syncDynamicStatus();
 
         $stats = $this->calculateElectionStats($event);
 
@@ -34,6 +31,7 @@ class MonitoringController extends Controller
     public function liveStats(Event $event)
     {
         $this->authorizeEventAccess($event);
+        $event->syncDynamicStatus();
 
         $stats = $this->calculateElectionStats($event);
 
@@ -48,7 +46,7 @@ class MonitoringController extends Controller
             'leader' => $stats['leader'] ? [
                 'number' => $stats['leader']->candidate_number,
                 'name' => $stats['leader']->display_name,
-                'votes' => $stats['leader']->votes_count,
+                'votes' => (int) ($stats['leader']->votes_count ?? 0),
             ] : null,
             'timestamp' => now()->format('H:i:s'),
         ]);
@@ -61,9 +59,7 @@ class MonitoringController extends Controller
     {
         $this->authorizeEventAccess($event);
 
-        $event->load(['candidates' => function ($query) {
-            $query->orderBy('candidate_number', 'asc');
-        }, 'creator']);
+        $event->load('creator');
 
         $stats = $this->calculateElectionStats($event);
 
@@ -94,10 +90,6 @@ class MonitoringController extends Controller
     public function exportCsv(Event $event): StreamedResponse
     {
         $this->authorizeEventAccess($event);
-
-        $event->load(['candidates' => function ($query) {
-            $query->orderBy('candidate_number', 'asc');
-        }]);
 
         $stats = $this->calculateElectionStats($event);
         $safeTitle = Str::slug($event->title) ?: 'event-' . $event->id;
@@ -155,6 +147,12 @@ class MonitoringController extends Controller
         $turnoutRate = $totalDPT > 0 ? round(($totalVotes / $totalDPT) * 100, 1) : 0;
         $nonVoters = max(0, $totalDPT - $totalVotes);
 
+        $event->load(['candidates' => function ($query) use ($event) {
+            $query->withCount(['votes' => function ($vq) use ($event) {
+                $vq->where('event_id', $event->id);
+            }])->orderBy('candidate_number', 'asc');
+        }]);
+
         $candidates = $event->candidates;
         $candidateStats = [];
         $leader = null;
@@ -162,7 +160,8 @@ class MonitoringController extends Controller
         $isTie = false;
 
         foreach ($candidates as $c) {
-            $percentage = $totalVotes > 0 ? round(($c->votes_count / $totalVotes) * 100, 1) : 0;
+            $votesCount = (int) ($c->votes_count ?? 0);
+            $percentage = $totalVotes > 0 ? round(($votesCount / $totalVotes) * 100, 1) : 0;
             
             $candidateStats[] = [
                 'id' => $c->id,
@@ -171,15 +170,15 @@ class MonitoringController extends Controller
                 'vice_chairman' => $c->vice_chairman_name,
                 'display_name' => $c->display_name,
                 'photo' => $c->photo ? (str_starts_with($c->photo, 'http') ? $c->photo : asset($c->photo)) : null,
-                'votes' => $c->votes_count,
+                'votes' => $votesCount,
                 'percentage' => $percentage,
             ];
 
-            if ($c->votes_count > $maxVotes) {
-                $maxVotes = $c->votes_count;
+            if ($votesCount > $maxVotes) {
+                $maxVotes = $votesCount;
                 $leader = $c;
                 $isTie = false;
-            } elseif ($c->votes_count === $maxVotes && $maxVotes > 0) {
+            } elseif ($votesCount === $maxVotes && $maxVotes > 0) {
                 $isTie = true;
             }
         }
@@ -210,7 +209,8 @@ class MonitoringController extends Controller
             return;
         }
 
-        if (!$user || $event->created_by_user_id !== $user->id) {
+        $isOfficer = $user && $event->officers()->where('users.id', $user->id)->exists();
+        if (!$user || ($event->created_by_user_id !== $user->id && !$isOfficer)) {
             abort(403, 'Anda tidak memiliki hak akses untuk memantau agenda pemilihan ini.');
         }
     }

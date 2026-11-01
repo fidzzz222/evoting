@@ -39,15 +39,30 @@ class VoterAuthController extends Controller
             ])->withInput();
         }
 
+        // Sinkronisasi status otomatis berdasarkan waktu saat ini (WIB)
+        $event->syncDynamicStatus();
+
         if ($event->status === 'DRAFT') {
+            if ($event->isBeforeStartTime()) {
+                return back()->withErrors([
+                    'room_code' => "Bilik suara '{$event->title}' belum dibuka. Pemilihan dijadwalkan mulai pada {$event->formatted_start_time}.",
+                ])->withInput();
+            }
+
             return back()->withErrors([
                 'room_code' => "Bilik suara '{$event->title}' belum dibuka oleh panitia (Status: Draft).",
             ])->withInput();
         }
 
-        if ($event->status === 'CLOSED') {
+        if ($event->status === 'CLOSED' || $event->isAfterEndTime()) {
             return back()->withErrors([
-                'room_code' => "Bilik suara '{$event->title}' telah resmi ditutup.",
+                'room_code' => "Bilik suara '{$event->title}' telah resmi ditutup karena batas waktu jadwal pemilihan ({$event->formatted_end_time}) telah berakhir.",
+            ])->withInput();
+        }
+
+        if ($event->isBeforeStartTime()) {
+            return back()->withErrors([
+                'room_code' => "Bilik suara '{$event->title}' belum dimulai. Pemilihan dijadwalkan mulai pada {$event->formatted_start_time}.",
             ])->withInput();
         }
 
@@ -100,6 +115,7 @@ class VoterAuthController extends Controller
         // 3. Check if voter has already voted in this event
         $hasVoted = EventParticipation::where('event_id', $event->id)
             ->where('voter_id', $voter->id)
+            ->where('has_voted', true)
             ->exists();
 
         if ($hasVoted) {

@@ -29,14 +29,17 @@ class VotingController extends Controller
 
         $now = Carbon::now();
 
-        // Auto-update status jika waktu selesai sudah lewat
-        if ($event->status === 'PUBLISHED' && $event->end_time && $now->gt($event->end_time)) {
-            $event->status = 'CLOSED';
-            $event->save();
-        }
+        // Auto-update status jika waktu selesai sudah lewat atau waktu mulai tiba
+        $event->syncDynamicStatus();
 
         // Cek status event
         if ($event->status === 'DRAFT') {
+            if ($event->candidates()->count() < 2) {
+                return response()->json([
+                    'message' => 'Event belum dapat dibuka karena belum memiliki minimal 2 paslon terdaftar.',
+                ], 422);
+            }
+
             return response()->json([
                 'message' => 'Event belum dipublikasikan',
             ], 422);
@@ -63,6 +66,12 @@ class VotingController extends Controller
         }
 
         $voter = $request->user();
+
+        if (! $event->isVoterEligible($voter)) {
+            return response()->json([
+                'message' => $event->getEligibilityMessage($voter),
+            ], 403);
+        }
 
         $participation = EventParticipation::firstOrCreate(
             [
@@ -115,13 +124,17 @@ class VotingController extends Controller
 
         // Cek event dan status
         $event = Event::findOrFail($eventId);
+
+        if (! $event->isVoterEligible($voter)) {
+            return response()->json([
+                'message' => $event->getEligibilityMessage($voter),
+            ], 403);
+        }
+
         $now = Carbon::now();
 
-        // Auto-update status jika waktu selesai sudah lewat
-        if ($event->status === 'PUBLISHED' && $event->end_time && $now->gt($event->end_time)) {
-            $event->status = 'CLOSED';
-            $event->save();
-        }
+        // Auto-update status jika waktu selesai sudah lewat atau waktu mulai tiba
+        $event->syncDynamicStatus();
 
         // Validasi status event
         if ($event->status !== 'PUBLISHED') {

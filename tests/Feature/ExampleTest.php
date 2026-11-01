@@ -28,7 +28,7 @@ class ExampleTest extends TestCase
         $content = $response->getContent();
         
         // Ensure single rendering without layout duplication
-        $this->assertEquals(1, substr_count($content, 'Otentikasi Pemilih'));
+        $this->assertEquals(1, substr_count($content, 'Masuk Pemilih'));
         $this->assertEquals(1, substr_count($content, 'action="' . route('voter.login.submit') . '"'));
         $this->assertEquals(1, substr_count($content, 'name="identifier"'));
     }
@@ -41,7 +41,7 @@ class ExampleTest extends TestCase
         $content = $response->getContent();
         
         // Ensure single rendering without layout duplication
-        $this->assertEquals(1, substr_count($content, 'Portal Panitia & Admin'));
+        $this->assertEquals(1, substr_count($content, 'Masuk Panitia & Admin'));
         $this->assertEquals(1, substr_count($content, 'action="' . route('admin.login.submit') . '"'));
         $this->assertEquals(1, substr_count($content, 'name="email"'));
     }
