@@ -15,14 +15,14 @@ use Illuminate\Validation\Rule;
 
 class EventController extends Controller
 {
+    // ambil daftar agenda pemilihan yang bisa diakses user
     public function index(Request $request)
     {
         Event::syncAllEventStatuses();
 
         $user = $request->user();
 
-        // SUPER_ADMIN dapat melihat semua event
-        // PETUGAS melihat event yang dibuat oleh dirinya sendiri ATAU di mana dirinya menjadi petugas kolaborator (officer)
+        // filter akses agenda sesuai role user
         $query = Event::accessibleBy($user)
             ->with(['creator', 'officers', 'candidates'])
             ->withCount('candidates')
@@ -34,7 +34,7 @@ class EventController extends Controller
             $event->syncDynamicStatus();
         }
 
-        // Pagination setelah update
+        // hitung paginasi data agenda
         $perPage = $request->get('per_page', 100);
         $page = $request->get('page', 1);
         $total = $events->count();
@@ -49,6 +49,7 @@ class EventController extends Controller
         ]);
     }
 
+    // buat agenda pemilihan baru
     public function store(StoreEventRequest $request)
     {
         $validated = $request->validated();
@@ -78,6 +79,7 @@ class EventController extends Controller
 
         $event->syncDynamicStatus();
 
+        // otomatis tautkan semua super admin sebagai panitia
         $superAdminIds = User::where('role', 'SUPER_ADMIN')->pluck('id')->all();
         if (!empty($superAdminIds)) {
             $event->officers()->syncWithoutDetaching($superAdminIds);
@@ -94,6 +96,7 @@ class EventController extends Controller
         ], 201);
     }
 
+    // ambil detail agenda dan kandidatnya
     public function show(Request $request, string $id)
     {
         $event = Event::accessibleBy($request->user())
@@ -108,6 +111,7 @@ class EventController extends Controller
         ]);
     }
 
+    // perbarui data agenda pemilihan
     public function update(UpdateEventRequest $request, string $id)
     {
         $event = Event::accessibleBy($request->user())->findOrFail($id);
@@ -160,18 +164,19 @@ class EventController extends Controller
         ]);
     }
 
+    // ubah status publikasi agenda
     public function updateStatus(Request $request, string $id)
     {
         $event = Event::accessibleBy($request->user())->findOrFail($id);
 
         $validated = $request->validate([
             'status' => ['required', Rule::in(['DRAFT', 'PUBLISHED', 'CLOSED'])],
-            'end_time' => 'nullable|date|after:now', // Untuk reopen event yang sudah selesai
+            'end_time' => 'nullable|date|after:now', // waktu baru jika membuka kembali agenda
         ]);
 
         $newStatus = $validated['status'];
 
-        // Jika mengubah status menjadi PUBLISHED, wajib memiliki minimal 2 kandidat terdaftar
+        // wajib minimal 2 paslon sebelum bisa diaktifkan
         if ($newStatus === 'PUBLISHED' && $event->candidates()->count() < 2) {
             return response()->json([
                 'message' => 'Event belum dapat diaktifkan karena belum memiliki minimal 2 pasangan calon terdaftar.',
@@ -180,9 +185,8 @@ class EventController extends Controller
             ], 422);
         }
 
-        // Jika membuka kembali event yang sudah CLOSED, wajib isi end_time baru
+        // jika buka kembali agenda closed, minta jadwal selesai baru
         if ($event->status === 'CLOSED' && $newStatus === 'PUBLISHED') {
-            // Cek apakah end_time sudah lewat atau belum ada
             $now = now();
             $needsNewEndTime = !$event->end_time || $now->greaterThan($event->end_time);
 
@@ -193,7 +197,6 @@ class EventController extends Controller
                 ], 422);
             }
 
-            // Update end_time jika diberikan
             if (isset($validated['end_time'])) {
                 $event->end_time = $validated['end_time'];
             }
@@ -214,12 +217,13 @@ class EventController extends Controller
         ]);
     }
 
+    // hapus agenda beserta kandidat, foto, dan relasinya
     public function destroy(Request $request, string $id)
     {
         $event = Event::accessibleBy($request->user())->findOrFail($id);
         $eventTitle = $event->title;
 
-        // Hapus kandidat berserta foto terkait jika ada
+        // bersihkan foto kandidat dari disk
         foreach ($event->candidates as $candidate) {
             if ($candidate->photo_url) {
                 $relativePath = preg_replace('#^/?storage/#', '', parse_url($candidate->photo_url, PHP_URL_PATH) ?? $candidate->photo_url);
@@ -230,12 +234,11 @@ class EventController extends Controller
             $candidate->delete();
         }
 
-        // Hapus votes dan event participations
+        // bersihkan data relasi voting dan panitia
         $event->votes()->delete();
         $event->participations()->delete();
         $event->officers()->detach();
 
-        // Hapus event
         $event->delete();
 
         AuditLog::log('DELETE_EVENT', "Menghapus event '{$eventTitle}' beserta data terkait", [
@@ -248,16 +251,13 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * Dapatkan detail link invite kolaborasi petugas
-     */
+    // ambil info link invite kolaborasi panitia
     public function getInviteInfo(Request $request, string $id)
     {
         $event = Event::accessibleBy($request->user())
             ->with('officers')
             ->findOrFail($id);
 
-        // Jika invite_token belum ada (misal event lama), generate baru
         if (empty($event->invite_token)) {
             $event->invite_token = $this->generateUniqueInviteToken();
             $event->save();
@@ -271,9 +271,7 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * Regenerate token invite link jika link bocor
-     */
+    // buat ulang token invite panitia jika link bocor
     public function regenerateInviteToken(Request $request, string $id)
     {
         $user = $request->user();
@@ -297,9 +295,7 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * Dapatkan detail info event berdasarkan token undangan sebelum bergabung
-     */
+    // cek info agenda via token undangan
     public function getJoinEventInfo(Request $request, string $token)
     {
         $event = Event::where('invite_token', $token)
@@ -318,9 +314,7 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * Petugas lain bergabung ke event menggunakan invite token via link URL
-     */
+    // panitia join ke agenda via token undangan
     public function joinViaInviteToken(Request $request, string $token)
     {
         $user = $request->user();
@@ -333,7 +327,7 @@ class EventController extends Controller
             ], 404);
         }
 
-        // Cek jika user adalah pembuat event
+        // cek jika user adalah pembuat agenda
         if ((int) $event->created_by_user_id === (int) $user->id) {
             return response()->json([
                 'message' => 'Anda adalah pembuat event ini.',
@@ -342,7 +336,7 @@ class EventController extends Controller
             ]);
         }
 
-        // Cek jika user sudah terdaftar sebagai officer
+        // cek jika user sudah terdaftar sebagai panitia
         if ($event->officers()->where('users.id', $user->id)->exists()) {
             return response()->json([
                 'message' => 'Anda sudah terdaftar sebagai petugas pada event ini.',
@@ -351,7 +345,7 @@ class EventController extends Controller
             ]);
         }
 
-        // Hubungkan petugas ke event
+        // hubungkan panitia ke agenda
         $event->officers()->attach($user->id);
 
         AuditLog::log('JOIN_EVENT_OFFICER', "Petugas '{$user->nama}' bergabung mengelola event '{$event->title}' via link undangan", [
@@ -367,9 +361,7 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * Hapus / batalkan akses petugas kolaborator dari event
-     */
+    // cabut akses kolaborator panitia dari agenda
     public function removeOfficer(Request $request, string $id, string $officerId)
     {
         $user = $request->user();

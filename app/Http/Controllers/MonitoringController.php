@@ -12,9 +12,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MonitoringController extends Controller
 {
-    /**
-     * Tampilkan halaman live monitoring hasil pemilihan.
-     */
+    // halaman live monitoring hasil pemilihan
     public function show(Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -25,9 +23,7 @@ class MonitoringController extends Controller
         return view('monitoring.show', compact('event', 'stats'));
     }
 
-    /**
-     * Endpoint API JSON untuk pembaruan data real-time chart via polling Axios.
-     */
+    // endpoint data real-time untuk polling chart
     public function liveStats(Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -52,9 +48,7 @@ class MonitoringController extends Controller
         ]);
     }
 
-    /**
-     * Unduh / Tampilkan Berita Acara Resmi Format PDF.
-     */
+    // unduh berita acara resmi format pdf
     public function downloadPdf(Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -63,7 +57,7 @@ class MonitoringController extends Controller
 
         $stats = $this->calculateElectionStats($event);
 
-        // Buat hash integritas digital untuk keabsahan laporan
+        // hash integritas digital untuk keabsahan laporan
         $rawVerification = $event->id . '|' . $stats['totalVotes'] . '|' . ($stats['leader']->id ?? 0) . '|' . config('app.key');
         $integrityHash = hash('sha256', $rawVerification);
 
@@ -84,9 +78,7 @@ class MonitoringController extends Controller
         return $pdf->stream($fileName);
     }
 
-    /**
-     * Ekspor Rekapitulasi Suara ke format CSV untuk Excel.
-     */
+    // ekspor rekapitulasi suara ke format csv
     public function exportCsv(Event $event): StreamedResponse
     {
         $this->authorizeEventAccess($event);
@@ -99,7 +91,7 @@ class MonitoringController extends Controller
             $output = fopen('php://output', 'w');
             fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
-            // Header info agenda
+            // header info agenda
             fputcsv($output, ['REKAPITULASI HASIL PEMILIHAN ELEKTRONIK']);
             fputcsv($output, ['Agenda Pemilihan', $event->title]);
             fputcsv($output, ['Kategori', $event->category]);
@@ -108,7 +100,7 @@ class MonitoringController extends Controller
             fputcsv($output, ['Waktu Ekspor', now()->format('Y-m-d H:i:s')]);
             fputcsv($output, []);
 
-            // Data partisipasi
+            // data partisipasi
             fputcsv($output, ['STATISTIK PARTISIPASI']);
             fputcsv($output, ['Total DPT Berhak', $stats['totalDPT']]);
             fputcsv($output, ['Total Suara Sah Masuk', $stats['totalVotes']]);
@@ -116,7 +108,7 @@ class MonitoringController extends Controller
             fputcsv($output, ['Tingkat Partisipasi (%)', $stats['turnoutRate'] . '%']);
             fputcsv($output, []);
 
-            // Tabel Paslon
+            // tabel perolehan suara paslon
             fputcsv($output, ['HASIL PEROLEHAN SUARA PASANGAN CALON']);
             fputcsv($output, ['No Urut', 'Calon Ketua', 'Calon Wakil', 'Perolehan Suara', 'Persentase (%)']);
 
@@ -137,17 +129,13 @@ class MonitoringController extends Controller
         ]);
     }
 
-    /**
-     * Helper perhitungan statistik pemilihan
-     */
+    // helper perhitungan statistik pemilihan
     private function calculateElectionStats(Event $event): array
     {
         return $event->getElectionStats();
     }
 
-    /**
-     * Authorize user access to this event.
-     */
+    // validasi hak akses user terhadap agenda
     protected function authorizeEventAccess(Event $event): void
     {
         if (!$event->canBeManagedBy(Auth::user())) {

@@ -9,19 +9,13 @@ use Illuminate\Validation\Rule;
 
 class UpdateCandidateRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    // Cek otorisasi request update paslon
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    // Aturan validasi update data paslon
     public function rules(): array
     {
         $isApi = $this->is('api/*') || $this->expectsJson();
@@ -47,9 +41,7 @@ class UpdateCandidateRequest extends FormRequest
         ];
     }
 
-    /**
-     * Resolve candidate pair display name.
-     */
+    // Format nama tampilan paslon gabungan ketua & wakil
     public function getCandidatePairName(?Candidate $existing = null): string
     {
         $chairman = trim((string) $this->input('chairman_name', ''));
@@ -67,9 +59,7 @@ class UpdateCandidateRequest extends FormRequest
         return $existing?->name ?? 'Pasangan Calon';
     }
 
-    /**
-     * Get route event ID.
-     */
+    // Ambil ID agenda dari route atau model paslon terkait
     public function getEventId(): ?string
     {
         $event = $this->route('event') ?? $this->route('eventId');
@@ -92,20 +82,14 @@ class UpdateCandidateRequest extends FormRequest
         return null;
     }
 
-    /**
-     * Get route candidate ID.
-     */
+    // Ambil ID paslon dari parameter route
     public function getCandidateId(): ?string
     {
         $candidate = $this->route('candidate') ?? $this->route('candidateId') ?? $this->route('id');
         return $candidate instanceof Candidate ? $candidate->id : ($candidate ? (string) $candidate : null);
     }
 
-    /**
-     * Custom validation messages.
-     *
-     * @return array<string, string>
-     */
+    // Pesan kustom kesalahan validasi update paslon
     public function messages(): array
     {
         return [

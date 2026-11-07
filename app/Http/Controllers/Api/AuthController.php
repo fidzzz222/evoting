@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    // Login panitia atau admin via email dan password
     public function userLogin(Request $request)
     {
         $request->validate([
@@ -25,6 +26,7 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Generate personal access token Sanctum
         $token = $user->createToken('user_token')->plainTextToken;
 
         return response()->json([
@@ -39,6 +41,7 @@ class AuthController extends Controller
         ]);
     }
 
+    // Login pemilih via nomor identitas (NIS/NIP)
     public function voterLogin(Request $request)
     {
         $request->validate([
@@ -54,18 +57,21 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Cek password jika akun pemilih diproteksi kata sandi
         if ($voter->password && (! $request->filled('password') || ! Hash::check($request->password, $voter->password))) {
             return response()->json([
                 'message' => 'Password tidak valid',
             ], 401);
         }
 
+        // Tolak akses jika akun dinonaktifkan panitia
         if (! $voter->is_active) {
             return response()->json([
                 'message' => 'Akun pemilih tidak aktif',
             ], 403);
         }
 
+        // Generate token akses untuk sesi bilik suara pemilih
         $token = $voter->createToken('voter_token')->plainTextToken;
 
         return response()->json([
@@ -81,6 +87,7 @@ class AuthController extends Controller
         ]);
     }
 
+    // Ambil data profil pemilik token saat ini
     public function me(Request $request)
     {
         return response()->json([
@@ -88,6 +95,7 @@ class AuthController extends Controller
         ]);
     }
 
+    // Hapus token akses saat pengguna logout
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

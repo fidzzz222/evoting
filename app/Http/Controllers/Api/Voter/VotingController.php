@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class VotingController extends Controller
 {
+    // Validasi kode bilik suara dan cek hak akses pemilih
     public function join(Request $request)
     {
         $validated = $request->validate([
@@ -115,6 +116,7 @@ class VotingController extends Controller
         ]);
     }
 
+    // Rekam pilihan suara pemilih untuk paslon yang dipilih
     public function vote(Request $request, string $eventId, CastVoteAction $castVoteAction)
     {
         $validated = $request->validate([
@@ -171,6 +173,7 @@ class VotingController extends Controller
         ], 201);
     }
 
+    // Rekapitulasi perolehan suara paslon untuk pemilih yang sudah memilih
     public function results(Request $request, string $eventId)
     {
         $voter = $request->user();
@@ -209,6 +212,7 @@ class VotingController extends Controller
         ]);
     }
 
+    // Detail agenda pemilihan dan daftar paslon peserta
     public function show(Request $request, string $eventId)
     {
         $voter = $request->user();

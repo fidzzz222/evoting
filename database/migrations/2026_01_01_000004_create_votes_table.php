@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('candidate_id')->constrained('candidates')->cascadeOnDelete();
             $table->timestamp('voted_at');
 
-            // Index performa agregasi penghitungan suara cepat
+            // index performa agregasi hitung suara cepat
             $table->index(['event_id', 'candidate_id']);
         });
     }

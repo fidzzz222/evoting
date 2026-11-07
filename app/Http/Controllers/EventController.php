@@ -15,12 +15,10 @@ use Illuminate\Support\Str;
 
 class EventController extends Controller
 {
-    /**
-     * Display a listing of election events.
-     */
+    // daftar agenda pemilihan
     public function index(Request $request)
     {
-        // Sinkronisasi status seluruh agenda secara otomatis sesuai jadwal mulai & selesai
+        // sinkronkan status agenda sesuai jadwal
         Event::syncAllEventStatuses();
 
         $query = Event::accessibleBy(Auth::user())
@@ -40,6 +38,7 @@ class EventController extends Controller
             $query->where('status', $request->status);
         }
 
+        // urutkan berdasarkan status prioritas dan waktu dibuat
         $events = $query->orderByRaw("CASE status WHEN 'PUBLISHED' THEN 1 WHEN 'DRAFT' THEN 2 WHEN 'CLOSED' THEN 3 ELSE 4 END")
             ->orderBy('created_at', 'desc')
             ->paginate(9)
@@ -48,9 +47,7 @@ class EventController extends Controller
         return view('events.index', compact('events'));
     }
 
-    /**
-     * Show the form for creating a new event.
-     */
+    // form buat agenda baru
     public function create()
     {
         $suggestedRoomCode = Event::generateUniqueRoomCode();
@@ -64,9 +61,7 @@ class EventController extends Controller
         return view('events.create', compact('suggestedRoomCode', 'availableClasses'));
     }
 
-    /**
-     * Store a newly created event in storage.
-     */
+    // simpan agenda pemilihan baru
     public function store(StoreEventRequest $request)
     {
         $validated = $request->validated();
@@ -87,8 +82,7 @@ class EventController extends Controller
 
         $event->syncDynamicStatus();
 
-        // Hubungkan seluruh pengguna role SUPER_ADMIN ke dalam kepanitiaan event (event_officers)
-        // agar seluruh administrator selalu terdaftar dan memiliki akses penuh ke agenda ini
+        // super admin otomatis dimasukkan ke panitia agenda
         $superAdminIds = User::where('role', 'SUPER_ADMIN')
             ->where('id', '!=', Auth::id())
             ->pluck('id');
@@ -106,9 +100,7 @@ class EventController extends Controller
             ->with('success', "Agenda '{$event->title}' berhasil dibuat. Daftarkan minimal 2 paslon.");
     }
 
-    /**
-     * Display the specified event details and management dashboard.
-     */
+    // detail dan dashboard agenda
     public function show(Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -125,9 +117,7 @@ class EventController extends Controller
         return view('events.show', compact('event', 'totalDPT', 'totalVotes', 'turnoutRate'));
     }
 
-    /**
-     * Show the form for editing the specified event.
-     */
+    // form edit agenda
     public function edit(Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -142,9 +132,7 @@ class EventController extends Controller
         return view('events.edit', compact('event', 'availableClasses'));
     }
 
-    /**
-     * Update the specified event in storage.
-     */
+    // update data agenda
     public function update(UpdateEventRequest $request, Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -174,9 +162,7 @@ class EventController extends Controller
             ->with('success', 'Agenda pemilihan berhasil diperbarui.');
     }
 
-    /**
-     * Update the election status (SCHEDULED, ACTIVE, PAUSED, CLOSED).
-     */
+    // ubah status agenda secara manual
     public function updateStatus(Request $request, Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -188,7 +174,7 @@ class EventController extends Controller
         $oldStatus = $event->status;
         $newStatus = $request->status;
 
-        // If activating, make sure there are at least 2 candidates
+        // wajib minimal 2 paslon dan belum lewat batas waktu
         if ($newStatus === 'PUBLISHED') {
             if ($event->candidates()->count() < 2) {
                 return back()->with('error', 'Minimal 2 paslon untuk mengaktifkan agenda.');
@@ -211,9 +197,7 @@ class EventController extends Controller
         return back()->with('success', "Status agenda diubah menjadi {$event->status_label}.");
     }
 
-    /**
-     * Join event as officer via collaborator invite link.
-     */
+    // gabung panitia lewat link undangan
     public function joinCollaborator(Request $request, Event $event)
     {
         $token = $request->query('token');
@@ -224,7 +208,7 @@ class EventController extends Controller
 
         $user = Auth::user();
 
-        // Check if already creator or officer or super admin
+        // cek apakah user sudah jadi panitia
         if ($user->isSuperAdmin() || $event->created_by_user_id === $user->id || $event->officers()->where('users.id', $user->id)->exists()) {
             return redirect()->route('events.show', $event)->with('info', 'Anda sudah terdaftar sebagai panitia.');
         }
@@ -241,9 +225,7 @@ class EventController extends Controller
             ->with('success', "Berhasil bergabung dalam panitia '{$event->title}'.");
     }
 
-    /**
-     * Regenerate collaborator invite token.
-     */
+    // buat ulang token link undangan
     public function regenerateInviteToken(Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -253,9 +235,7 @@ class EventController extends Controller
         return back()->with('success', 'Tautan undangan berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified event.
-     */
+    // hapus agenda
     public function destroy(Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -272,9 +252,7 @@ class EventController extends Controller
         return redirect()->route('events.index')->with('success', "Agenda '{$title}' berhasil dihapus.");
     }
 
-    /**
-     * Check if user has permission to manage this event.
-     */
+    // cek hak akses kelola agenda
     protected function authorizeEventAccess(Event $event): void
     {
         if (!$event->canBeManagedBy(Auth::user())) {

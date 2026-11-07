@@ -9,11 +9,13 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminAuthController extends Controller
 {
+    // form login admin
     public function showLoginForm()
     {
         return view('auth.admin-login');
     }
 
+    // proses login admin
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -27,7 +29,9 @@ class AdminAuthController extends Controller
 
         $remember = $request->boolean('remember');
 
+        // autentikasi akun admin / petugas
         if (Auth::guard('web')->attempt($credentials, $remember)) {
+            // reset session id agar aman
             $request->session()->regenerate();
             $user = Auth::guard('web')->user();
 
@@ -45,6 +49,7 @@ class AdminAuthController extends Controller
         ])->onlyInput('email');
     }
 
+    // logout admin
     public function logout(Request $request)
     {
         $user = Auth::guard('web')->user();

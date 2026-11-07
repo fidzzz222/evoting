@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 
 class SystemController extends Controller
 {
+    // Ringkasan metrik statistik sistem untuk admin
     public function stats(Request $request)
     {
         $totalSuperAdmin = User::where('role', 'SUPER_ADMIN')->count();
@@ -76,6 +77,7 @@ class SystemController extends Controller
         ]);
     }
 
+    // Reset total suara dan status partisipasi pemilih pada agenda tertentu
     public function resetEventVotes(Request $request, string $eventId)
     {
         $event = Event::findOrFail($eventId);
@@ -104,6 +106,7 @@ class SystemController extends Controller
         ]);
     }
 
+    // Bersihkan cache aplikasi, konfigurasi, dan rute
     public function clearCache(Request $request)
     {
         \Illuminate\Support\Facades\Artisan::call('cache:clear');
@@ -117,6 +120,7 @@ class SystemController extends Controller
         ]);
     }
 
+    // Ekspor seluruh data DPT pemilih ke format berkas CSV
     public function exportVoters(Request $request)
     {
         $voters = Voter::orderBy('id', 'asc')->get();

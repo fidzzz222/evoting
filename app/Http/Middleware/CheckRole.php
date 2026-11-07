@@ -9,11 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
+    // Cek hak akses role user (SUPER_ADMIN / PETUGAS) pada route yang dilindungi
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         $allowedRoles = [];

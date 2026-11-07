@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 
 class PetugasController extends Controller
 {
+    // Daftar akun panitia/petugas pemilihan
     public function index(Request $request)
     {
         $petugas = User::where('role', 'PETUGAS')
@@ -18,6 +19,7 @@ class PetugasController extends Controller
         return response()->json($petugas);
     }
 
+    // Registrasi akun petugas baru
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -39,6 +41,7 @@ class PetugasController extends Controller
         ], 201);
     }
 
+    // Perbarui profil atau kata sandi petugas
     public function update(Request $request, string $id)
     {
         $petugas = User::where('role', 'PETUGAS')->findOrFail($id);
@@ -69,6 +72,7 @@ class PetugasController extends Controller
         ]);
     }
 
+    // Hapus akun petugas jika belum membuat agenda pemilihan
     public function destroy(string $id)
     {
         $petugas = User::where('role', 'PETUGAS')->findOrFail($id);

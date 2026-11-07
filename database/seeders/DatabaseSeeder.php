@@ -15,12 +15,10 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database for school presentation demo.
-     */
+    // data awal untuk demo presentasi sistem e-voting
     public function run(): void
     {
-        // 1. Seed Administrator and Petugas
+        // 1. akun administrator dan petugas
         $superAdmin = User::create([
             'nama' => 'Administrator Utama',
             'email' => 'admin@evoting.sch.id',
@@ -42,7 +40,7 @@ class DatabaseSeeder extends Seeder
             'role' => 'PETUGAS',
         ]);
 
-        // 2. Seed Master DPT (Siswa & Guru - Passwordless: Auth via NISN/NIP + Kode Bilik Suara)
+        // 2. data master dpt siswa dan guru
         $votersData = [
             // Siswa
             ['identifier' => '102401', 'nama' => 'Aditya Pratama', 'kelas' => 'XII IPA 1', 'type' => 'SISWA'],
@@ -67,7 +65,7 @@ class DatabaseSeeder extends Seeder
             $voters[] = Voter::create(array_merge($vData, ['is_active' => true]));
         }
 
-        // 3. Seed Main Election Event (Pemilihan Ketua OSIS)
+        // 3. agenda pemilihan utama (osis)
         $now = Carbon::now();
         $eventOsis = Event::create([
             'created_by_user_id' => $petugas1->id,
@@ -81,10 +79,10 @@ class DatabaseSeeder extends Seeder
             'status' => 'PUBLISHED',
         ]);
 
-        // Attach Super Admin as officer to event so Admin has full access
+        // hubungkan super admin ke agenda pemilihan
         $eventOsis->officers()->attach($superAdmin->id);
 
-        // 4. Seed Candidates for Event OSIS
+        // 4. pasangan calon event osis
         $candidate1 = Candidate::create([
             'event_id' => $eventOsis->id,
             'candidate_number' => 1,
@@ -112,8 +110,7 @@ class DatabaseSeeder extends Seeder
             'description' => "Paslon 03 - Calon Ketua & Wakil Ketua OSIS (Kelas XI MIPA 3 & XI IPS 1)",
         ]);
 
-        // 5. Seed Event Participations & Some Initial Anonymous Votes (for demo charts)
-        // Let first 6 voters vote already, while remaining 7 have not voted yet!
+        // 5. partisipasi dan simulasi suara masuk
         $votesToCast = [
             $candidate1->id,
             $candidate1->id,
@@ -135,7 +132,7 @@ class DatabaseSeeder extends Seeder
             ]);
 
             if ($hasVoted) {
-                // Anonymous vote
+                // suara anonim tanpa relasi ke pemilih
                 Vote::create([
                     'event_id' => $eventOsis->id,
                     'candidate_id' => $votesToCast[$index],
@@ -144,7 +141,7 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        // 6. Seed Scheduled/Draft Event (MPK)
+        // 6. agenda pemilihan cadangan/draft (mpk)
         $eventMpk = Event::create([
             'created_by_user_id' => $petugas2->id,
             'title' => 'Pemilihan Ketua Majelis Perwakilan Kelas (MPK)',
@@ -157,10 +154,10 @@ class DatabaseSeeder extends Seeder
             'status' => 'DRAFT',
         ]);
 
-        // Attach Super Admin as officer to event so Admin has full access
+        // hubungkan super admin ke agenda mpk
         $eventMpk->officers()->attach($superAdmin->id);
 
-        // 7. Seed Audit Logs
+        // 7. log audit awal sistem
         AuditLog::create([
             'user_type' => 'USER',
             'user_id' => $superAdmin->id,

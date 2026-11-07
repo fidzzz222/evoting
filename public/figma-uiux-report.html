@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan UI/UX E-Voting - Desktop Specification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            navy: {
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172b',
+              950: '#080c17',
+            },
+            civic: {
+              blue: '#2563eb',
+              sky: '#0ea5e9',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#e11d48',
+              slate: '#f8fafc',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f8fafc; }
+    .artboard-container { width: 1440px; margin: 0 auto; }
+    .figma-frame {
+      width: 1440px;
+      min-height: 900px;
+      background: #f8fafc;
+      color: #0f172a;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 80px;
+      position: relative;
+    }
+    .badge-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body class="p-8">
+
+  <!-- Document Meta Header -->
+  <header class="max-w-[1440px] mx-auto mb-10 pb-6 border-b border-slate-800 flex items-center justify-between">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/80 border border-blue-800 text-blue-300 text-xs font-mono mb-3">
+        <span>UI/UX DESIGN SYSTEM & CANVAS SPECIFICATION</span>
+      </div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-white">E-Voting Sekolah: Rancangan Antarmuka Desktop</h1>
+      <p class="text-slate-400 text-sm mt-1">Dokumen spesifikasi UI/UX siap transfer ke Figma. Viewport: Desktop 1440px &times; 900px.</p>
+    </div>
+    <div class="text-right">
+      <div class="text-xs text-slate-400 font-mono">FRAME RATIO: 16:10 / 1440px</div>
+      <div class="text-xs text-emerald-400 font-mono mt-1 font-semibold">STATUS: SESUAI PROJEK LARAVEL</div>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- FRAME 1: DESIGN TOKENS & ATOMIC COMPONENTS (1440 x 960)                    -->
+  <!-- ========================================================================= -->
+  <div class="artboard-container">
+    <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2 px-1">
+      <span class="text-blue-400 font-bold">FIGMA FRAME 01 &mdash; DESIGN SYSTEM FOUNDATIONS & COMPONENTS</span>
+      <span>1440 &times; auto</span>
+    </div>
+    <section class="figma-frame p-10 bg-white" id="frame-tokens">
+      <!-- Section Title -->
+      <div class="border-b border-slate-200 pb-6 mb-8 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-wider text-slate-500">Design Foundations</span>
+          <h2 class="text-2xl font-bold text-slate-900 tracking-tight">1. Palet Warna & Tipografi Resmi</h2>
+        </div>
+        <span class="px-3 py-1 bg-slate-100 border border-slate-200 rounded-md text-xs font-mono text-slate-700">MASTER.md Token Specs</span>
+      </div>
+
+      <!-- Color Swatches Grid -->
+      <div class="mb-10">
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4 font-mono">1.1 Palet Warna Sistem</h3>
+        <div class="grid grid-cols-6 gap-4">
+          <!-- Swatch 1: Civic Navy 900 -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div class="h-20 bg-[#0f172b]"></div>
+            <div class="p-3 bg-white">
+              <div class="text-xs font-bold text-slate-900">Navy 900 (Main)</div>
+              <div class="text-[11px] font-mono text-slate-500">#0F172B</div>
+              <div class="text-[10px] text-slate-400 mt-1">Sidebar, Primary Action</div>
+            </div>
+          </div>
+          <!-- Swatch 2: Navy 800 -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div class="h-20 bg-[#1e293b]"></div>
+            <div class="p-3 bg-white">
+              <div class="text-xs font-bold text-slate-900">Navy 800 (Hover)</div>
+              <div class="text-[11px] font-mono text-slate-500">#1E293B</div>
+              <div class="text-[10px] text-slate-400 mt-1">Sidebar Active/Border</div>
+            </div>
+          </div>
+          <!-- Swatch 3: Civic Blue -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div class="h-20 bg-[#2563eb]"></div>
+            <div class="p-3 bg-white">
+              <div class="text-xs font-bold text-slate-900">Civic Blue (Accent)</div>
+              <div class="text-[11px] font-mono text-slate-500">#2563EB</div>
+              <div class="text-[10px] text-slate-400 mt-1">Focus Ring, Progress, Link</div>
+            </div>
+          </div>
+          <!-- Swatch 4: Emerald -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div class="h-20 bg-[#10b981]"></div>
+            <div class="p-3 bg-white">
+              <div class="text-xs font-bold text-slate-900">Emerald 500</div>
+              <div class="text-[11px] font-mono text-slate-500">#10B981</div>
+              <div class="text-[10px] text-slate-400 mt-1">Status Bilik Aktif</div>
+            </div>
+          </div>
+          <!-- Swatch 5: Amber -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div class="h-20 bg-[#f59e0b]"></div>
+            <div class="p-3 bg-white">
+              <div class="text-xs font-bold text-slate-900">Amber 500</div>
+              <div class="text-[11px] font-mono text-slate-500">#F59E0B</div>
+              <div class="text-[10px] text-slate-400 mt-1">Draft & Peringatan</div>
+            </div>
+          </div>
+          <!-- Swatch 6: Slate 50 Surface -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div class="h-20 bg-[#f8fafc] border-b border-slate-200"></div>
+            <div class="p-3 bg-white">
+              <div class="text-xs font-bold text-slate-900">Slate 50 (Surface)</div>
+              <div class="text-[11px] font-mono text-slate-500">#F8FAFC</div>
+              <div class="text-[10px] text-slate-400 mt-1">App Canvas Background</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typography & Components Library -->
+      <div class="grid grid-cols-2 gap-10">
+        <!-- Typography Scale -->
+        <div>
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4 font-mono">1.2 Skala Tipografi (Inter)</h3>
+          <div class="space-y-4 p-5 bg-slate-50 rounded-xl border border-slate-200">
+            <div>
+              <div class="text-xs font-mono text-slate-400">Heading 1 &bull; Bold 30px / Line 36px</div>
+              <div class="text-3xl font-bold text-slate-900 tracking-tight">Selamat Datang di Bilik Suara</div>
+            </div>
+            <div>
+              <div class="text-xs font-mono text-slate-400">Heading 2 &bull; Bold 24px / Line 32px</div>
+              <div class="text-2xl font-bold text-slate-900 tracking-tight">Agenda Pemilihan Ketua OSIS</div>
+            </div>
+            <div>
+              <div class="text-xs font-mono text-slate-400">Heading 3 &bull; Semibold 18px / Line 26px</div>
+              <div class="text-lg font-semibold text-slate-900 tracking-tight">Paslon 01 &mdash; Fathan &amp; Zhafira</div>
+            </div>
+            <div>
+              <div class="text-xs font-mono text-slate-400">Body &bull; Regular 14px / Line 20px</div>
+              <p class="text-sm text-slate-600 leading-relaxed">Silakan gunakan hak pilih Anda secara jujur dan transparan demi kemajuan organisasi sekolah.</p>
+            </div>
+            <div>
+              <div class="text-xs font-mono text-slate-400">Tabular Numbers &bull; SemiBold 14px (Mono)</div>
+              <div class="text-sm font-mono font-semibold text-slate-800">1.240 / 1.500 Pemilih (82.6%) &bull; #3ZYYWL</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Component Library Showcase -->
+        <div>
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4 font-mono">1.3 Komponen Utama (Atoms)</h3>
+          <div class="space-y-4 p-5 bg-slate-50 rounded-xl border border-slate-200">
+            <!-- Buttons -->
+            <div>
+              <div class="text-xs font-mono text-slate-400 mb-2">Tombol Aksi (Buttons)</div>
+              <div class="flex items-center gap-3">
+                <button class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold shadow-sm hover:bg-slate-800">Primary (Navy)</button>
+                <button class="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold shadow-sm hover:bg-blue-700">Civic Blue CTA</button>
+                <button class="px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-medium hover:bg-slate-100">Secondary Outline</button>
+                <button class="px-4 py-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 text-xs font-semibold">Destructive</button>
+              </div>
+            </div>
+
+            <!-- Status Badges -->
+            <div>
+              <div class="text-xs font-mono text-slate-400 mb-2">Status Badges (Pills)</div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Sedang Aktif
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draft
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-300">
+                  Selesai
+                </span>
+              </div>
+            </div>
+
+            <!-- Form Inputs -->
+            <div>
+              <div class="text-xs font-mono text-slate-400 mb-2">Input Fields</div>
+              <div class="space-y-2">
+                <input type="text" placeholder="nama@evoting.sch.id" readonly value="admin@evoting.sch.id" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- FRAME 2: DESKTOP ADMIN DASHBOARD (1440 x 900)                              -->
+  <!-- ========================================================================= -->
+  <div class="artboard-container">
+    <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2 px-1">
+      <span class="text-blue-400 font-bold">FIGMA FRAME 02 &mdash; SCREEN: DASHBOARD ADMIN &amp; PANITIA</span>
+      <span>1440 &times; 900 (Desktop Viewport)</span>
+    </div>
+    <section class="figma-frame flex" id="frame-dashboard">
+      <!-- Dark Navy Sidebar (Width: 256px) -->
+      <aside class="w-64 bg-[#0f172b] border-r border-[#1e293b] flex flex-col justify-between shrink-0">
+        <div>
+          <!-- Brand Logo Header -->
+          <div class="h-16 px-5 flex items-center gap-3 border-b border-[#1e293b]">
+            <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">EV</div>
+            <div>
+              <span class="text-sm font-bold tracking-tight text-white block">E-VOTING</span>
+              <span class="text-[10px] font-medium tracking-wide text-slate-400 block uppercase">Panel Administrator</span>
+            </div>
+          </div>
+
+          <!-- Nav Menu -->
+          <nav class="p-3 space-y-1">
+            <div class="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Navigasi Utama</div>
+            
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-slate-800 text-white font-semibold border border-slate-700/60 shadow-xs">
+              <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="9" rx="1.5"/><rect x="13" y="3" width="8" height="7" rx="1.5"/><rect x="13" y="12" width="8" height="9" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>
+              <span>Dashboard</span>
+            </a>
+
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800/60 font-medium">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15.5l2 2 4.5-4.5"/></svg>
+              <span>Agenda Pemilihan</span>
+            </a>
+
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800/60 font-medium">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><circle cx="8" cy="10" r="2"/><line x1="13.5" y1="9.5" x2="18.5" y2="9.5"/></svg>
+              <span>Data Pemilih</span>
+            </a>
+
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800/60 font-medium">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2.5 19 6v5.5c0 5-3.5 9.5-7 10.5-3.5-1-7-5.5-7-10.5V6l7-3.5Z"/><circle cx="12" cy="10" r="2"/></svg>
+              <span>Panitia &amp; Admin</span>
+            </a>
+
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800/60 font-medium">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="3.5" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+              <span>Log Audit</span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- Sidebar User Profile Bottom -->
+        <div class="p-3 border-t border-[#1e293b] bg-[#0f172b]">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-slate-800 text-slate-200 font-semibold border border-slate-700 flex items-center justify-center text-xs">
+                S
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-white">Super Admin</div>
+                <div class="text-[10px] text-slate-400">admin@evoting.sch.id</div>
+              </div>
+            </div>
+            <div class="text-slate-400 hover:text-white cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 bg-[#f8fafc] flex flex-col min-w-0">
+        <!-- Top Nav / Action Bar -->
+        <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Dashboard</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-xs font-semibold text-slate-900">Ringkasan Pemilihan</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Sistem Berjalan Normal
+            </span>
+            <button class="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-semibold shadow-xs">+ Buat Agenda</button>
+          </div>
+        </header>
+
+        <!-- Scrollable Dashboard Body -->
+        <div class="p-8 space-y-6 overflow-y-auto">
+          <!-- Welcome Card -->
+          <div class="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Selamat Datang, Super Admin!</h1>
+              <p class="text-xs text-slate-500 mt-1">Kelola dan pantau seluruh tahapan pemungutan suara digital sekolah secara transparan dan aman.</p>
+            </div>
+            <div class="text-xs font-mono text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+              Tahun Ajaran: 2026/2027
+            </div>
+          </div>
+
+          <!-- 4 Stat Cards Grid -->
+          <div class="grid grid-cols-4 gap-5">
+            <!-- Card 1 -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-medium text-slate-500">Total Agenda</span>
+                <span class="p-2 rounded-xl bg-blue-50 text-blue-600">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/></svg>
+                </span>
+              </div>
+              <div class="text-2xl font-bold text-slate-900 tabular-nums">4</div>
+              <div class="text-[11px] text-slate-500 mt-1">Agenda terdaftar di sistem</div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-medium text-slate-500">Bilik Suara Aktif</span>
+                <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6.5l1.5 1.5 3-3"/><rect x="7" y="2.5" width="10" height="8" rx="1.5"/></svg>
+                </span>
+              </div>
+              <div class="text-2xl font-bold text-emerald-600 tabular-nums">1</div>
+              <div class="text-[11px] text-slate-500 mt-1">Pemungutan sedang berlangsung</div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-medium text-slate-500">Draft Agenda</span>
+                <span class="p-2 rounded-xl bg-amber-50 text-amber-600">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2.5H6a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-12l-6-5Z"/></svg>
+                </span>
+              </div>
+              <div class="text-2xl font-bold text-amber-600 tabular-nums">2</div>
+              <div class="text-[11px] text-slate-500 mt-1">Belum dipublikasikan</div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-medium text-slate-500">Pemilihan Selesai</span>
+                <span class="p-2 rounded-xl bg-slate-100 text-slate-600">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 14.5l2 2 4-4"/><rect x="3" y="3.5" width="18" height="5" rx="1.5"/></svg>
+                </span>
+              </div>
+              <div class="text-2xl font-bold text-slate-700 tabular-nums">1</div>
+              <div class="text-[11px] text-slate-500 mt-1">Arsip berita acara tersedia</div>
+            </div>
+          </div>
+
+          <!-- Active Election Cards Grid -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-bold text-slate-900 tracking-tight">Agenda Pemilihan Aktif &amp; Terkelola</h2>
+              <span class="text-xs font-semibold text-blue-600 cursor-pointer">Lihat Semua &rarr;</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+              <!-- Active Event Card -->
+              <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-3 mb-2">
+                    <span class="text-xs font-medium text-slate-500">Pemilihan OSIS</span>
+                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+                    </span>
+                  </div>
+                  <h3 class="text-lg font-bold text-slate-900 mb-2 leading-snug">Pemilihan Ketua &amp; Wakil Ketua OSIS 2026/2027</h3>
+                  <div class="flex items-center gap-2 text-xs text-slate-500 mb-5">
+                    <span>Semua Siswa</span>
+                    <span>&bull;</span>
+                    <span class="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-semibold">#3ZYYWL</span>
+                  </div>
+
+                  <!-- Progress Bar Turnout -->
+                  <div class="space-y-1.5 mb-4">
+                    <div class="flex items-center justify-between text-xs font-medium">
+                      <span class="text-slate-500">Partisipasi Suara</span>
+                      <span class="text-slate-800 tabular-nums font-semibold">680 / 850 (80.0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/60">
+                      <div class="bg-blue-600 h-full rounded-full" style="width: 80%"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span class="text-slate-500 font-medium">2 Pasangan Calon</span>
+                  <div class="flex gap-2">
+                    <button class="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium">Quick Count</button>
+                    <button class="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800">Buka Bilik Suara</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Draft Event Card -->
+              <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-3 mb-2">
+                    <span class="text-xs font-medium text-slate-500">Pemilihan MPK</span>
+                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draft
+                    </span>
+                  </div>
+                  <h3 class="text-lg font-bold text-slate-900 mb-2 leading-snug">Pemilihan Ketua MPK Periode 2026/2027</h3>
+                  <div class="flex items-center gap-2 text-xs text-slate-500 mb-5">
+                    <span>Perwakilan Kelas</span>
+                    <span>&bull;</span>
+                    <span class="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-semibold">#9KLPQW</span>
+                  </div>
+
+                  <!-- Progress Bar Draft -->
+                  <div class="space-y-1.5 mb-4">
+                    <div class="flex items-center justify-between text-xs font-medium">
+                      <span class="text-slate-500">Kelengkapan Paslon</span>
+                      <span class="text-slate-800 tabular-nums font-semibold">3 / 3 Lengkap</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/60">
+                      <div class="bg-amber-500 h-full rounded-full" style="width: 100%"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span class="text-slate-500 font-medium">3 Calon Terdaftar</span>
+                  <div class="flex gap-2">
+                    <button class="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium">Edit Konfigurasi</button>
+                    <button class="px-3 py-1.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700">Publikasikan</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- FRAME 3: DESKTOP BILIK SUARA / VOTING BOOTH (1440 x 900)                   -->
+  <!-- ========================================================================= -->
+  <div class="artboard-container">
+    <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2 px-1">
+      <span class="text-blue-400 font-bold">FIGMA FRAME 03 &mdash; SCREEN: BILIK SUARA PEMILIH (VOTING BOOTH)</span>
+      <span>1440 &times; 900 (Desktop Viewport)</span>
+    </div>
+    <section class="figma-frame flex flex-col justify-between bg-slate-50" id="frame-booth">
+      <!-- Clean Top Navbar -->
+      <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">EV</div>
+          <div>
+            <span class="text-sm font-bold tracking-tight text-slate-900 block">E-VOTING SEKOLAH</span>
+            <span class="text-[11px] font-medium text-slate-500 block -mt-0.5">Bilik Suara Resmi Digital</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <!-- Active Voter Info Pill -->
+          <div class="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+            <div class="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs">
+              M
+            </div>
+            <div class="text-left">
+              <div class="text-xs font-semibold text-slate-900 leading-tight">Muhammad Rafi</div>
+              <div class="text-[10px] text-slate-500 font-medium leading-tight">Siswa &bull; XII MIPA 1 (NISN: 0054321980)</div>
+            </div>
+          </div>
+
+          <button class="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50">
+            Keluar Bilik
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Booth Content (Max-w-7xl) -->
+      <div class="flex-1 max-w-7xl w-full mx-auto p-8 flex flex-col justify-start space-y-6">
+        <!-- Event Header Banner -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                Pemilihan OSIS
+              </span>
+              <span class="text-slate-300">&bull;</span>
+              <span class="text-xs font-mono font-medium text-slate-500">
+                KODE BILIK: #3ZYYWL
+              </span>
+              <span class="text-slate-300">&bull;</span>
+              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Sesi Pemilihan Aktif
+              </span>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">
+              Pemilihan Ketua &amp; Wakil Ketua OSIS Periode 2026/2027
+            </h2>
+            <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+              Cermati profil, visi, dan misi tiap pasangan calon. Klik tombol <strong class="text-slate-800 font-semibold">Pilih Paslon</strong> untuk menetapkan suara Anda.
+            </p>
+          </div>
+
+          <!-- Notice Box -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 max-w-xs text-xs text-slate-600 flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="leading-relaxed">
+              <span class="font-semibold text-slate-800 block">Hak Suara Tunggal</span>
+              1 Pemilih = 1 Hak Suara. Pilihan langsung tercatat aman &amp; rahasia.
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Candidate Cards Grid (Equal Width on Desktop) -->
+        <div class="grid grid-cols-2 gap-8">
+          <!-- Candidate 01 Card -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between overflow-hidden">
+            <div class="p-6 pb-4">
+              <div class="flex items-center justify-between gap-4 mb-4">
+                <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 text-white font-bold tabular-nums text-base">
+                  01
+                </span>
+                <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                  Kandidat No. Urut 1
+                </span>
+              </div>
+
+              <!-- Candidate Image Area -->
+              <div class="relative w-full h-44 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 mb-5 flex items-center justify-center">
+                <div class="text-center text-slate-400">
+                  <svg class="w-12 h-12 mx-auto mb-1 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  <span class="text-xs font-semibold text-slate-500">Foto Resmi Paslon 01</span>
+                </div>
+              </div>
+
+              <h4 class="text-xl font-bold text-slate-900 tracking-tight">Ahmad Fauzi &amp; Siti Rahma</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                Mewujudkan OSIS yang progresif, inklusif, dan berdaya saing global melalui sinergi karya siswa.
+              </p>
+            </div>
+
+            <!-- Vision Mission Accordion Preview -->
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 text-xs">
+              <div class="flex items-center justify-between font-semibold text-slate-700 py-1">
+                <span>Visi &amp; Misi Paslon</span>
+                <span class="text-blue-600 font-mono text-[11px]">&darr; Ringkasan</span>
+              </div>
+              <div class="pt-2 text-slate-600 space-y-1.5 border-t border-slate-200 mt-1">
+                <div><strong class="text-slate-800">Visi:</strong> Inovasi digital ekstrakurikuler &amp; transparansi anggaran.</div>
+                <div><strong class="text-slate-800">Misi:</strong> Menyelenggarakan pekan seni, riset, dan advokasi siswa aktif.</div>
+              </div>
+            </div>
+
+            <!-- Card Action Footer -->
+            <div class="p-6 pt-4 bg-white border-t border-slate-200">
+              <button class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Pilih Paslon #01</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Candidate 02 Card -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between overflow-hidden">
+            <div class="p-6 pb-4">
+              <div class="flex items-center justify-between gap-4 mb-4">
+                <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 text-white font-bold tabular-nums text-base">
+                  02
+                </span>
+                <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                  Kandidat No. Urut 2
+                </span>
+              </div>
+
+              <!-- Candidate Image Area -->
+              <div class="relative w-full h-44 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 mb-5 flex items-center justify-center">
+                <div class="text-center text-slate-400">
+                  <svg class="w-12 h-12 mx-auto mb-1 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  <span class="text-xs font-semibold text-slate-500">Foto Resmi Paslon 02</span>
+                </div>
+              </div>
+
+              <h4 class="text-xl font-bold text-slate-900 tracking-tight">Dimas Prasetyo &amp; Amanda Putri</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                Membangun ekosistem belajar suportif, ramah lingkungan, dan menjunjung tinggi empati sosial.
+              </p>
+            </div>
+
+            <!-- Vision Mission Accordion Preview -->
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 text-xs">
+              <div class="flex items-center justify-between font-semibold text-slate-700 py-1">
+                <span>Visi &amp; Misi Paslon</span>
+                <span class="text-blue-600 font-mono text-[11px]">&darr; Ringkasan</span>
+              </div>
+              <div class="pt-2 text-slate-600 space-y-1.5 border-t border-slate-200 mt-1">
+                <div><strong class="text-slate-800">Visi:</strong> Sekolah hijau, bebas perundungan, dan kolaboratif.</div>
+                <div><strong class="text-slate-800">Misi:</strong> Program konseling sebaya, bank sampah, dan turnamen olahraga.</div>
+              </div>
+            </div>
+
+            <!-- Card Action Footer -->
+            <div class="p-6 pt-4 bg-white border-t border-slate-200">
+              <button class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Pilih Paslon #02</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Disclaimer -->
+      <footer class="h-12 bg-white border-t border-slate-200 px-8 flex items-center justify-between text-xs text-slate-400 shrink-0">
+        <div>Kerahasiaan Suara Dijamin oleh Kriptografi Token Hash</div>
+        <div class="font-mono">E-Voting Sekolah Version 1.0 &bull; 2026</div>
+      </footer>
+    </section>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- FRAME 4: DESKTOP MODAL KONFIRMASI SUARA & AUTH (1440 x 900)               -->
+  <!-- ========================================================================= -->
+  <div class="artboard-container">
+    <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2 px-1">
+      <span class="text-blue-400 font-bold">FIGMA FRAME 04 &mdash; STATE: MODAL KONFIRMASI PILIHAN &amp; AUTENTIKASI</span>
+      <span>1440 &times; 900 (Overlay &amp; Dialog Viewport)</span>
+    </div>
+    <section class="figma-frame p-8 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center" id="frame-modal">
+      <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <!-- Modal Top Bar -->
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">Verifikasi Pemilih</span>
+          <span class="text-xs text-slate-400">Langkah Terakhir</span>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-[#0f172b] text-white flex items-center justify-center mx-auto mb-4 font-bold text-xl shadow-md">
+            01
+          </div>
+
+          <h3 class="text-lg font-bold text-slate-900 mb-1">Konfirmasi Pilihan Suara Anda</h3>
+          <p class="text-xs text-slate-500 mb-5">Pastikan pilihan Anda sudah benar sebelum mengirimkan ke kotak suara digital:</p>
+
+          <!-- Selected Candidate Preview Card -->
+          <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 text-left mb-4">
+            <div class="text-[11px] font-mono text-blue-600 font-semibold mb-0.5">PASANGAN CALON NOMOR URUT 01</div>
+            <div class="text-sm font-bold text-slate-900">Ahmad Fauzi &amp; Siti Rahma</div>
+            <div class="text-xs text-slate-500 mt-1">Calon Ketua &amp; Wakil Ketua OSIS 2026/2027</div>
+          </div>
+
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 text-left flex items-start gap-2 mb-2">
+            <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div>Pilihan bersifat final dan langsung dicatat ke dalam database tertutup. Tidak dapat diganti kembali.</div>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+          <button class="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-800 bg-white border border-slate-300">
+            Batal
+          </button>
+          <button class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Ya, Tetapkan Pilihan</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</body>
+</html>

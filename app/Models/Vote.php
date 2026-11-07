@@ -9,8 +9,8 @@ class Vote extends Model
 {
     use HasFactory;
 
+    // Model suara sah - sengaja tidak menyimpan voter_id untuk menjamin kerahasiaan pilihan (asas LUBER)
     public $timestamps = false;
-
     protected $fillable = [
         'event_id',
         'candidate_id',

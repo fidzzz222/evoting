@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminManagementController extends Controller
 {
+    // Daftar akun Super Admin
     public function index(Request $request)
     {
         $query = User::where('role', 'SUPER_ADMIN');
@@ -29,6 +30,7 @@ class AdminManagementController extends Controller
         return response()->json($admins);
     }
 
+    // Registrasi Super Admin baru
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -61,6 +63,7 @@ class AdminManagementController extends Controller
         ], 201);
     }
 
+    // Perbarui profil atau kata sandi Super Admin
     public function update(Request $request, string $id)
     {
         $admin = User::where('role', 'SUPER_ADMIN')->findOrFail($id);
@@ -100,16 +103,19 @@ class AdminManagementController extends Controller
         ]);
     }
 
+    // Hapus akun Super Admin (dilarang hapus akun sendiri atau akun admin terakhir)
     public function destroy(Request $request, string $id)
     {
         $admin = User::where('role', 'SUPER_ADMIN')->findOrFail($id);
 
+        // Larang hapus akun yang sedang dipakai login
         if ($admin->id === $request->user()->id) {
             return response()->json([
                 'message' => 'Tidak dapat menghapus akun Super Admin yang sedang digunakan.',
             ], 422);
         }
 
+        // Cegah sistem kehilangan seluruh Super Admin
         $superAdminCount = User::where('role', 'SUPER_ADMIN')->count();
         if ($superAdminCount <= 1) {
             return response()->json([

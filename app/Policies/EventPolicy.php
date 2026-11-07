@@ -7,10 +7,7 @@ use App\Models\User;
 
 class EventPolicy
 {
-    /**
-     * Perform pre-authorization checks.
-     * Super Admin can perform any action.
-     */
+    // super admin punya bypass akses penuh ke semua aksi
     public function before(User $user, string $ability): ?bool
     {
         if ($user->isSuperAdmin()) {
@@ -20,49 +17,37 @@ class EventPolicy
         return null;
     }
 
-    /**
-     * Determine whether the user can view any events.
-     */
+    // izin melihat daftar agenda pemilihan
     public function viewAny(User $user): bool
     {
         return true;
     }
 
-    /**
-     * Determine whether the user can view the event.
-     */
+    // izin melihat detail agenda pemilihan
     public function view(User $user, Event $event): bool
     {
         return $event->canBeManagedBy($user);
     }
 
-    /**
-     * Determine whether the user can create events.
-     */
+    // izin membuat agenda pemilihan baru
     public function create(User $user): bool
     {
         return true;
     }
 
-    /**
-     * Determine whether the user can update the event.
-     */
+    // izin mengubah data agenda pemilihan
     public function update(User $user, Event $event): bool
     {
         return $event->canBeManagedBy($user);
     }
 
-    /**
-     * Determine whether the user can delete the event.
-     */
+    // izin menghapus agenda pemilihan
     public function delete(User $user, Event $event): bool
     {
         return $event->canBeManagedBy($user);
     }
 
-    /**
-     * Determine whether the user can manage the event and its resources.
-     */
+    // izin mengelola kandidat, token, dan hasil agenda
     public function manage(User $user, Event $event): bool
     {
         return $event->canBeManagedBy($user);

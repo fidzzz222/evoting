@@ -74,6 +74,7 @@ class AuditLog extends Model
         return 'SYSTEM';
     }
 
+    // Catat log aktivitas user, voter, atau sistem ke database
     public static function log(string $action, ?string $description = null, ?array $payload = null, $user = null): self
     {
         $req = request();

@@ -9,13 +9,7 @@ use Illuminate\Support\Facades\Hash;
 
 class VoterImportService
 {
-    /**
-     * Import or update voters from Web CSV file format:
-     * Columns: [nama, identifier/nisn, type, kelas]
-     *
-     * @param  \Illuminate\Http\UploadedFile|string  $file
-     * @return array{imported: int, updated: int}
-     */
+    // Import atau sinkronisasi DPT dari file CSV format web: nama, identifier/nisn, type, kelas
     public function importCsvForWeb(UploadedFile|string $file): array
     {
         $handle = $this->openCsvFile($file);
@@ -77,13 +71,7 @@ class VoterImportService
         ];
     }
 
-    /**
-     * Import voters from API CSV file format:
-     * Columns: [identifier, nama, type, password]
-     *
-     * @param  \Illuminate\Http\UploadedFile|string  $file
-     * @return array{imported: int, errors: array<string>}
-     */
+    // Import DPT dari CSV format API: identifier, nama, type, password
     public function importCsvForApi(UploadedFile|string $file): array
     {
         $handle = $this->openCsvFile($file);
@@ -129,12 +117,7 @@ class VoterImportService
         ];
     }
 
-    /**
-     * Import voters from raw validated array for API.
-     *
-     * @param  array<array{identifier: string, nama: string, type: string, password: string}>  $votersData
-     * @return array{imported: int, errors: array<string>}
-     */
+    // Import DPT dari batch array data terverifikasi (endpoint API)
     public function importArrayForApi(array $votersData): array
     {
         $imported = 0;
@@ -163,12 +146,7 @@ class VoterImportService
         ];
     }
 
-    /**
-     * Helper to open CSV file stream and remove UTF-8 BOM if present.
-     *
-     * @param  \Illuminate\Http\UploadedFile|string  $file
-     * @return resource
-     */
+    // Buka file CSV dan bersihkan UTF-8 BOM jika ada
     protected function openCsvFile(UploadedFile|string $file)
     {
         $path = $file instanceof UploadedFile ? $file->getRealPath() : $file;

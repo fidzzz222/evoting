@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class AuditLogController extends Controller
 {
-    /**
-     * Tampilkan catatan aktivitas dan audit trail sistem.
-     */
+    // daftar riwayat log aktivitas sistem
     public function index(Request $request)
     {
         $search = $request->query('search');
@@ -49,9 +47,7 @@ class AuditLogController extends Controller
         ));
     }
 
-    /**
-     * Bersihkan log lama (lebih dari 30 hari).
-     */
+    // hapus log lawas
     public function prune(Request $request)
     {
         $days = (int) $request->input('days', 30);
@@ -59,18 +55,16 @@ class AuditLogController extends Controller
 
         AuditLog::log('LOGS_PRUNED', "Membersihkan {$deleted} catatan audit trail yang lebih dari {$days} hari");
 
-        return back()->with('success', "{$deleted} catatan log berhasil dibersihkan.");
+        return back()->with('success', "Berhasil membersihkan {$deleted} catatan log lama.");
     }
 
-    /**
-     * Alat optimasi: bersihkan cache konfigurasi, rute, dan view sistem.
-     */
+    // bersihkan cache aplikasi
     public function clearCache()
     {
         Artisan::call('optimize:clear');
         
         AuditLog::log('SYSTEM_CACHE_CLEARED', 'Melakukan pembersihan cache sistem (optimize:clear)');
 
-        return back()->with('success', 'Cache sistem berhasil dibersihkan.');
+        return back()->with('success', 'Cache sistem (view, route, config) berhasil dibersihkan dan dioptimalkan!');
     }
 }

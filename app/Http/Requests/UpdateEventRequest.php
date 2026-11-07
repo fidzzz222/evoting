@@ -8,19 +8,13 @@ use Illuminate\Validation\Rule;
 
 class UpdateEventRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    // Cek otorisasi request update agenda
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    // Aturan validasi update data agenda pemilihan
     public function rules(): array
     {
         $isApi = $this->is('api/*') || $this->expectsJson();
@@ -52,11 +46,7 @@ class UpdateEventRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get custom error messages for validator errors.
-     *
-     * @return array<string, string>
-     */
+    // Pesan kustom kesalahan validasi form
     public function messages(): array
     {
         return [

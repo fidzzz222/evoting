@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamp('voted_at')->nullable();
             $table->timestamps();
 
-            // Constraint unik untuk mencegah pencoblosan ganda per event
+            // cegah pemilih nyoblos ganda di agenda yang sama
             $table->unique(['event_id', 'voter_id']);
         });
     }

@@ -60,25 +60,19 @@ class Event extends Model
         return $this->hasMany(EventParticipation::class, 'event_id');
     }
 
-    /**
-     * Mengecek apakah jadwal mulai pemilihan belum tiba
-     */
+    // cek apakah pemilihan belum dimulai
     public function isBeforeStartTime(): bool
     {
         return $this->start_time && Carbon::now()->lt($this->start_time);
     }
 
-    /**
-     * Mengecek apakah jadwal selesai pemilihan sudah berakhir
-     */
+    // cek apakah jadwal pemilihan sudah lewat
     public function isAfterEndTime(): bool
     {
         return $this->end_time && Carbon::now()->gte($this->end_time);
     }
 
-    /**
-     * Mengecek apakah waktu saat ini berada di dalam rentang jadwal mulai s/d selesai
-     */
+    // cek apakah waktu sekarang masuk dalam rentang jadwal aktif
     public function isInScheduledWindow(): bool
     {
         $now = Carbon::now();
@@ -91,9 +85,7 @@ class Event extends Model
         return true;
     }
 
-    /**
-     * Memperbarui status event secara otomatis berdasarkan waktu sekarang (WIB) dan syarat minimal 2 kandidat
-     */
+    // sync status agenda otomatis sesuai jadwal wib dan syarat minimal 2 paslon
     public function syncDynamicStatus(): bool
     {
         $now = Carbon::now();
@@ -145,14 +137,7 @@ class Event extends Model
         return $updated;
     }
 
-    /**
-     * Sinkronisasi seluruh agenda pemilihan secara otomatis:
-     * 1. Menutup agenda yang telah melewati jadwal selesai (end_time <= now) menjadi CLOSED
-     * 2. Mengembalikan agenda PUBLISHED yang belum memiliki minimal 2 kandidat menjadi DRAFT
-     * 3. Membuka (publish) agenda DRAFT yang telah memasuki jadwal mulai (start_time <= now <= end_time) dan memiliki minimal 2 kandidat menjadi PUBLISHED
-     *
-     * @return array{closed: int, reverted: int, started: int, total: int}
-     */
+    // Sinkronisasi status seluruh agenda (tutup yang lewat jadwal, draft-kan jika < 2 paslon, buka jika jadwal tiba)
     public static function syncAllEventStatuses(): array
     {
         $now = Carbon::now();
@@ -211,10 +196,7 @@ class Event extends Model
         ];
     }
 
-    /**
-     * Sinkronisasi seluruh event aktif/draft yang waktu selesainya telah terlewati menjadi CLOSED.
-     * Juga menjalankan sinkronisasi pembukaan agenda yang telah memasuki jadwal mulai.
-     */
+    // Helper sinkronisasi event kedaluwarsa
     public static function syncAllExpiredEvents(): int
     {
         $result = static::syncAllEventStatuses();
@@ -280,11 +262,10 @@ class Event extends Model
         };
     }
 
-    /**
-     * Memeriksa apakah pemilih memenuhi kriteria target hak pilih event
-     */
+    // Cek apakah pemilih masuk dalam target hak pilih agenda ini
     public function isVoterEligible(?Voter $voter): bool
     {
+        // Pemilih nonaktif atau null langsung ditolak
         if (!$voter || !$voter->is_active) {
             return false;
         }
@@ -299,9 +280,11 @@ class Event extends Model
                 return $voter->type === 'GURU';
 
             case 'KELAS':
+                // Jika filter kelas kosong, izinkan seluruh siswa
                 if (empty($this->target_class)) {
                     return $voter->type === 'SISWA';
                 }
+                // Pisahkan daftar kelas target (misal: "X RPL 1, X RPL 2") dan bandingkan case-insensitive
                 $targetClasses = array_map(function ($item) {
                     return strtolower(trim($item));
                 }, explode(',', $this->target_class));
@@ -311,13 +294,12 @@ class Event extends Model
 
             case 'ALL':
             default:
+                // Seluruh warga sekolah (guru & siswa) berhak memilih
                 return true;
         }
     }
 
-    /**
-     * Pesan penjelasan jika pemilih ditolak karena tidak memenuhi syarat scope
-     */
+    // Pesan penolakan jika pemilih tidak memenuhi target hak pilih
     public function getEligibilityMessage(?Voter $voter): ?string
     {
         if (!$voter) {
@@ -351,9 +333,7 @@ class Event extends Model
         }
     }
 
-    /**
-     * Query pemilih yang memenuhi syarat untuk event ini
-     */
+    // Query DPT yang memenuhi syarat untuk agenda ini
     public function eligibleVotersQuery()
     {
         $query = Voter::where('is_active', true);
@@ -379,9 +359,7 @@ class Event extends Model
         }
     }
 
-    /**
-     * Hitung total DPT yang berhak memilih pada event ini
-     */
+    // Hitung total DPT yang berhak memilih
     public function eligibleVotersCount(): int
     {
         return $this->eligibleVotersQuery()->count();
@@ -419,10 +397,7 @@ class Event extends Model
         };
     }
 
-    /**
-     * Scope query to events accessible by the given user.
-     * Super Admin can access all events; Petugas only sees events they created or are assigned as officers.
-     */
+    // Filter event yang dapat diakses user (super admin akses semua, petugas hanya miliknya/kolaborasi)
     public function scopeAccessibleBy($query, ?User $user = null)
     {
         $user = $user ?? Auth::user();
@@ -443,9 +418,7 @@ class Event extends Model
         });
     }
 
-    /**
-     * Determine if the event can be managed by the given user.
-     */
+    // Cek apakah user berhak mengelola event ini
     public function canBeManagedBy(?User $user = null): bool
     {
         $user = $user ?? Auth::user();
@@ -465,9 +438,7 @@ class Event extends Model
         return $this->officers()->where('users.id', $user->id)->exists();
     }
 
-    /**
-     * Calculate and return unified election statistics.
-     */
+    // Hitung statistik lengkap perolehan suara dan partisipasi pemilih
     public function getElectionStats(): array
     {
         $totalDPT = $this->eligibleVotersCount();
@@ -542,9 +513,7 @@ class Event extends Model
         ];
     }
 
-    /**
-     * Generate unique room code.
-     */
+    // buat kode bilik unik 6 karakter
     public static function generateUniqueRoomCode(int $length = 6): string
     {
         do {
@@ -554,9 +523,7 @@ class Event extends Model
         return $code;
     }
 
-    /**
-     * Generate unique invite token.
-     */
+    // buat token invite unik untuk tautan langsung
     public static function generateUniqueInviteToken(int $length = 32): string
     {
         do {

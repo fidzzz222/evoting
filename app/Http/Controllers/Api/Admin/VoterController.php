@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 
 class VoterController extends Controller
 {
+    // Daftar data pemilih dengan filter pencarian dan tipe
     public function index(Request $request)
     {
         $query = Voter::query();
@@ -32,6 +33,7 @@ class VoterController extends Controller
         return response()->json($voters);
     }
 
+    // Simpan data pemilih baru
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -56,8 +58,10 @@ class VoterController extends Controller
         ], 201);
     }
 
+    // Impor massal DPT pemilih via berkas CSV atau JSON array
     public function import(Request $request, VoterImportService $importService)
     {
+        // Jalur 1: Unggah file CSV
         if ($request->hasFile('file')) {
             $request->validate([
                 'file' => 'required|file|mimes:csv,txt',
@@ -71,6 +75,7 @@ class VoterController extends Controller
             ]);
         }
 
+        // Jalur 2: Payload mentah JSON array
         $validated = $request->validate([
             'voters' => 'required|array',
             'voters.*.identifier' => 'required|string',
@@ -87,6 +92,7 @@ class VoterController extends Controller
         ]);
     }
 
+    // Perbarui profil atau kata sandi pemilih
     public function update(Request $request, string $id)
     {
         $voter = Voter::findOrFail($id);
@@ -116,6 +122,7 @@ class VoterController extends Controller
         ]);
     }
 
+    // hapus data pemilih dari sistem
     public function destroy(string $id)
     {
         $voter = Voter::findOrFail($id);
@@ -126,6 +133,7 @@ class VoterController extends Controller
         ]);
     }
 
+    // toggle status aktif akun pemilih
     public function toggleStatus(string $id)
     {
         $voter = Voter::findOrFail($id);

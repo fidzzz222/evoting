@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 
 class CandidateController extends Controller
 {
+    // simpan pasangan calon baru ke agenda
     public function store(StoreCandidateRequest $request, string $eventId)
     {
         $event = Event::accessibleBy($request->user())->findOrFail($eventId);
@@ -38,6 +39,7 @@ class CandidateController extends Controller
         ], 201);
     }
 
+    // perbarui data pasangan calon
     public function update(UpdateCandidateRequest $request, string $id)
     {
         $candidate = Candidate::whereHas('event', fn($q) => $q->accessibleBy($request->user()))->findOrFail($id);
@@ -77,6 +79,7 @@ class CandidateController extends Controller
         ]);
     }
 
+    // hapus pasangan calon jika belum ada suara masuk
     public function destroy(Request $request, string $id)
     {
         $candidate = Candidate::whereHas('event', fn($q) => $q->accessibleBy($request->user()))->findOrFail($id);

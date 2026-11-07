@@ -6,23 +6,18 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEventRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    // Cek otorisasi request pembuatan agenda
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    // Aturan validasi pembuatan agenda baru (form web dan REST API)
     public function rules(): array
     {
         $isApi = $this->is('api/*') || $this->expectsJson();
 
+        // Validasi fleksibel untuk endpoint REST API
         if ($isApi) {
             return [
                 'title' => 'required|string|max:255',
@@ -36,6 +31,7 @@ class StoreEventRequest extends FormRequest
             ];
         }
 
+        // Validasi ketat untuk form web panel admin
         return [
             'title' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:100'],
@@ -48,11 +44,7 @@ class StoreEventRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get custom error messages for validator errors.
-     *
-     * @return array<string, string>
-     */
+    // Pesan kustom kesalahan validasi form
     public function messages(): array
     {
         return [

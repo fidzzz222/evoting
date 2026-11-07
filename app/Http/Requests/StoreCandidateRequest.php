@@ -9,25 +9,20 @@ use Illuminate\Validation\Rule;
 
 class StoreCandidateRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    // Cek otorisasi request simpan paslon
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    // Aturan validasi pendaftaran paslon baru dalam agenda pemilihan
     public function rules(): array
     {
         $isApi = $this->is('api/*') || $this->expectsJson();
         $eventId = $this->getEventId();
 
         return [
+            // Nomor urut paslon unik per agenda
             'candidate_number' => [
                 'required',
                 'integer',
@@ -46,14 +41,13 @@ class StoreCandidateRequest extends FormRequest
         ];
     }
 
-    /**
-     * Resolve candidate pair display name.
-     */
+    // Format nama tampilan paslon gabungan ketua & wakil
     public function getCandidatePairName(): string
     {
         $chairman = trim((string) $this->input('chairman_name', ''));
         $vice = trim((string) $this->input('vice_chairman_name', ''));
 
+        // Gabungkan nama ketua dan wakil jika keduanya terisi
         if ($chairman !== '') {
             return $vice !== '' ? "{$chairman} & {$vice}" : $chairman;
         }
@@ -66,20 +60,14 @@ class StoreCandidateRequest extends FormRequest
         return 'Pasangan Calon';
     }
 
-    /**
-     * Get route event ID.
-     */
+    // Ambil ID agenda dari parameter route
     public function getEventId(): ?string
     {
         $event = $this->route('event') ?? $this->route('eventId');
         return $event instanceof Event ? $event->id : $event;
     }
 
-    /**
-     * Custom validation messages.
-     *
-     * @return array<string, string>
-     */
+    // Pesan kustom kesalahan validasi paslon
     public function messages(): array
     {
         return [

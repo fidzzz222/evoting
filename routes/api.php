@@ -15,16 +15,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
 
+    // Otentikasi publik API untuk user dan pemilih
     Route::post('/auth/login', [AuthController::class, 'userLogin']);
     Route::post('/auth/users/login', [AuthController::class, 'userLogin']);
     Route::post('/auth/voter/login', [AuthController::class, 'voterLogin']);
     Route::post('/auth/voters/login', [AuthController::class, 'voterLogin']);
 
-
+    // Rute API terproteksi token akun panitia & admin
     Route::middleware(['auth:users'])->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
 
+        // Rute khusus Super Admin
         Route::middleware('role:SUPER_ADMIN')->prefix('admin')->group(function () {
 
             Route::get('/admins', [AdminManagementController::class, 'index']);
@@ -52,6 +54,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/system/voters/export', [SystemController::class, 'exportVoters']);
         });
 
+        // Rute operasional pemilihan untuk Petugas & Super Admin
         Route::middleware('role:PETUGAS,SUPER_ADMIN')->prefix('petugas')->group(function () {
 
             Route::get('/events', [EventController::class, 'index']);
@@ -77,6 +80,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    // Rute API terproteksi token pemilih (voter)
     Route::middleware(['auth:voters'])->prefix('voter')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);

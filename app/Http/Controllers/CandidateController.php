@@ -14,9 +14,7 @@ use Illuminate\Validation\Rule;
 
 class CandidateController extends Controller
 {
-    /**
-     * Display a listing of candidates for an event.
-     */
+    // daftar paslon dalam satu agenda
     public function index(Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -29,23 +27,19 @@ class CandidateController extends Controller
         return view('candidates.index', compact('event', 'candidates'));
     }
 
-    /**
-     * Show the form for creating a new candidate.
-     */
+    // form tambah paslon baru
     public function create(Event $event)
     {
         $this->authorizeEventAccess($event);
 
-        // Calculate next candidate number automatically
+        // nomor urut paslon berikutnya
         $nextNumber = ($event->candidates()->max('candidate_number') ?? 0) + 1;
         $existingCandidates = $event->candidates()->orderBy('candidate_number', 'asc')->get();
 
         return view('candidates.create', compact('event', 'nextNumber', 'existingCandidates'));
     }
 
-    /**
-     * Store a newly created candidate in storage.
-     */
+    // simpan data paslon baru
     public function store(StoreCandidateRequest $request, Event $event)
     {
         $this->authorizeEventAccess($event);
@@ -76,13 +70,12 @@ class CandidateController extends Controller
 
         $totalCandidates = $event->candidates()->count();
 
-        // Cek sinkronisasi status event (jika waktu jadwal aktif dan paslon >= 2, otomatis aktif)
+        // aktifkan agenda otomatis kalau paslon sudah cukup (min 2)
         $previousStatus = $event->status;
         $event->syncDynamicStatus();
         $event->refresh();
 
-        // Alur bertahap & wajib: jika paslon masih kurang dari 2 (syarat wajib belum terpenuhi),
-        // atau jika user secara eksplisit memilih simpan & tambah paslon berikutnya
+        // kalau belum 2 paslon, arahkan tambah paslon berikutnya
         if ($request->input('action') === 'add_another' || $totalCandidates < 2) {
             $nextNumber = ($event->candidates()->max('candidate_number') ?? 0) + 1;
             return redirect()->route('events.candidates.create', $event)
@@ -98,9 +91,7 @@ class CandidateController extends Controller
             ->with('success', "Paslon #{$candidate->candidate_number} ({$candidate->name}) berhasil didaftarkan.{$statusMsg}");
     }
 
-    /**
-     * Show the form for editing the specified candidate.
-     */
+    // form edit paslon
     public function edit(Event $event, Candidate $candidate)
     {
         $this->authorizeEventAccess($event);
@@ -112,9 +103,7 @@ class CandidateController extends Controller
         return view('candidates.edit', compact('event', 'candidate'));
     }
 
-    /**
-     * Update the specified candidate in storage.
-     */
+    // update data paslon
     public function update(UpdateCandidateRequest $request, Event $event, Candidate $candidate)
     {
         $this->authorizeEventAccess($event);
@@ -151,9 +140,7 @@ class CandidateController extends Controller
             ->with('success', "Data Paslon #{$candidate->candidate_number} berhasil diperbarui.");
     }
 
-    /**
-     * Remove the specified candidate from storage.
-     */
+    // hapus paslon
     public function destroy(Event $event, Candidate $candidate)
     {
         $this->authorizeEventAccess($event);
@@ -162,6 +149,7 @@ class CandidateController extends Controller
             abort(404);
         }
 
+        // jangan hapus kalau sudah ada suara masuk
         if ($candidate->votes()->count() > 0 || $event->votes()->count() > 0) {
             return back()->with('error', 'Paslon tidak dapat dihapus karena sudah memiliki suara masuk.');
         }
@@ -176,6 +164,7 @@ class CandidateController extends Controller
             ['event_id' => $event->id]
         );
 
+        // balik ke DRAFT kalau paslon kurang dari 2
         $previousStatus = $event->status;
         $event->syncDynamicStatus();
         $event->refresh();
@@ -188,9 +177,7 @@ class CandidateController extends Controller
         return back()->with('success', $msg);
     }
 
-    /**
-     * Authorize user access to this event.
-     */
+    // validasi hak akses kelola agenda
     protected function authorizeEventAccess(Event $event): void
     {
         if (!$event->canBeManagedBy(Auth::user())) {

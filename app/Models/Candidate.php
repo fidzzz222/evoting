@@ -17,9 +17,7 @@ class Candidate extends Model
         });
     }
 
-    /**
-     * Upload and store candidate photo, cleaning up prior photo if present.
-     */
+    // Simpan file foto paslon baru dan hapus foto lama jika ada
     public function savePhoto($file): string
     {
         $this->deletePhoto();
@@ -34,9 +32,7 @@ class Candidate extends Model
         return $this->photo_url;
     }
 
-    /**
-     * Delete existing candidate photo from public storage.
-     */
+    // Hapus file pasfoto paslon dari storage publik
     public function deletePhoto(): void
     {
         if (! $this->photo_url) {

@@ -11,20 +11,17 @@ use Illuminate\Support\Facades\DB;
 
 class CastVoteAction
 {
-    /**
-     * Execute cast vote transaction with pessimistic locking.
-     *
-     * @throws \RuntimeException
-     */
+    // proses simpan suara pemilih dengan database transaction
     public function execute(Event $event, Voter $voter, int $candidateId): Vote
     {
         return DB::transaction(function () use ($event, $voter, $candidateId) {
-            // 1. Pessimistic lock on voter participation to prevent double-voting race condition
+            // lock data partisipasi biar gak bisa double vote
             $participation = EventParticipation::where('event_id', $event->id)
                 ->where('voter_id', $voter->id)
                 ->lockForUpdate()
                 ->first();
 
+            // buat data partisipasi baru jika belum ada
             if (! $participation) {
                 $participation = EventParticipation::create([
                     'event_id' => $event->id,
@@ -36,11 +33,12 @@ class CastVoteAction
                     ->first();
             }
 
+            // pastikan belum pernah nyoblos
             if ($participation && $participation->has_voted) {
                 throw new \RuntimeException('Anda sudah pernah memilih pada event ini!');
             }
 
-            // 2. Pessimistic lock on candidate belonging to this event
+            // pastikan kandidat sesuai dengan event
             $candidate = Candidate::where('event_id', $event->id)
                 ->where('id', $candidateId)
                 ->lockForUpdate()
@@ -52,14 +50,14 @@ class CastVoteAction
 
             $now = now();
 
-            // 3. Store completely ANONYMOUS ballot (no voter_id attached)
+            // simpan surat suara (anonim tanpa id pemilih)
             $vote = Vote::create([
                 'event_id' => $event->id,
                 'candidate_id' => $candidate->id,
                 'voted_at' => $now,
             ]);
 
-            // 4. Update voter participation record
+            // tandai pemilih sudah menggunakan hak suaranya
             $participation->update([
                 'has_voted' => true,
                 'voted_at' => $now,

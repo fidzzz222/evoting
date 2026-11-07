@@ -9,8 +9,8 @@ class EventParticipation extends Model
 {
     use HasFactory;
 
+    // Mencatat bukti kehadiran dan status pemilih tanpa menghubungkan kandidat mana yang dicoblos
     protected $table = 'event_participations';
-
     protected $fillable = [
         'event_id',
         'voter_id',

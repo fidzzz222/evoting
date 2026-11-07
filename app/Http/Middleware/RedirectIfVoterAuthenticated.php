@@ -9,11 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectIfVoterAuthenticated
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
+    // Arahkan pemilih yang sudah login langsung ke bilik suara aktif atau dashboard
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::guard('voter')->check()) {

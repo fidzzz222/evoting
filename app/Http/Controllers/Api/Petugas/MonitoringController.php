@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 
 class MonitoringController extends Controller
 {
+    // validasi hak akses panitia terhadap agenda
     private function authorizeEventAccess(Request $request, Event $event): void
     {
         if (! $event->canBeManagedBy($request->user())) {
@@ -16,6 +17,7 @@ class MonitoringController extends Controller
         }
     }
 
+    // data statistik hasil perolehan suara secara real-time
     public function monitor(Request $request, string $eventId)
     {
         $event = Event::findOrFail($eventId);
@@ -56,6 +58,7 @@ class MonitoringController extends Controller
         ]);
     }
 
+    // ekspor data rekapitulasi perhitungan suara format json
     public function export(Request $request, string $eventId)
     {
         $event = Event::with('creator')->findOrFail($eventId);

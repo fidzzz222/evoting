@@ -13,9 +13,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VoterManagementController extends Controller
 {
-    /**
-     * Tampilkan data master DPT (Daftar Pemilih Tetap).
-     */
+    // daftar data master DPT
     public function index(Request $request)
     {
         $search = $request->query('search');
@@ -45,7 +43,7 @@ class VoterManagementController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // Daftar kelas unik untuk dropdown filter
+        // opsi filter kelas
         $classList = Voter::select('kelas')->whereNotNull('kelas')->distinct()->pluck('kelas');
 
         $totalDPT = Voter::count();
@@ -59,17 +57,13 @@ class VoterManagementController extends Controller
         ));
     }
 
-    /**
-     * Form tambah pemilih manual.
-     */
+    // form tambah pemilih
     public function create()
     {
         return view('admin.voters.create');
     }
 
-    /**
-     * Simpan pemilih manual baru.
-     */
+    // simpan data pemilih baru
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -93,17 +87,13 @@ class VoterManagementController extends Controller
             ->with('success', "Data pemilih {$voter->nama} berhasil didaftarkan.");
     }
 
-    /**
-     * Form edit pemilih.
-     */
+    // form edit pemilih
     public function edit(Voter $voter)
     {
         return view('admin.voters.edit', compact('voter'));
     }
 
-    /**
-     * Perbarui data pemilih.
-     */
+    // update data pemilih
     public function update(Request $request, Voter $voter)
     {
         $validated = $request->validate([
@@ -130,12 +120,11 @@ class VoterManagementController extends Controller
             ->with('success', "Data pemilih {$voter->nama} berhasil diperbarui.");
     }
 
-    /**
-     * Hapus pemilih.
-     */
+    // hapus pemilih dan data partisipasinya
     public function destroy(Voter $voter)
     {
         $nama = $voter->nama;
+        // hapus partisipasi dulu agar relasi bersih
         $voter->participations()->delete();
         $voter->delete();
 
@@ -145,9 +134,7 @@ class VoterManagementController extends Controller
             ->with('success', "Pemilih {$nama} berhasil dihapus.");
     }
 
-    /**
-     * Toggle status aktif pemilih.
-     */
+    // toggle status aktif pemilih
     public function toggleStatus(Voter $voter)
     {
         $voter->is_active = !$voter->is_active;
@@ -159,9 +146,7 @@ class VoterManagementController extends Controller
         return back()->with('success', "Status pemilih {$voter->nama} berhasil diubah.");
     }
 
-    /**
-     * Import massal DPT via file CSV.
-     */
+    // import massal dpt via file csv
     public function importCsv(Request $request, VoterImportService $importService)
     {
         $request->validate([
@@ -174,9 +159,7 @@ class VoterManagementController extends Controller
             ->with('success', "Import DPT selesai: {$result['imported']} baru, {$result['updated']} diperbarui.");
     }
 
-    /**
-     * Ekspor seluruh DPT ke format CSV.
-     */
+    // ekspor dpt ke format csv
     public function exportCsv(): StreamedResponse
     {
         $voters = Voter::orderBy('type')->orderBy('kelas')->orderBy('nama')->get();
@@ -206,9 +189,7 @@ class VoterManagementController extends Controller
         ]);
     }
 
-    /**
-     * Unduh file template CSV untuk memudahkan panitia mengisi data DPT sekolah.
-     */
+    // unduh template csv import dpt
     public function downloadTemplate(): StreamedResponse
     {
         $fileName = 'Template-Import-DPT.csv';

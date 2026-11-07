@@ -9,15 +9,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class VoterAuthenticate
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
+    // Verifikasi otentikasi dan status aktif akun pemilih
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::guard('voter')->check()) {
-            return redirect()->route('voter.login')->with('error', 'Silakan masuk terlebih dahulu.');
+            return redirect()->route('voter.login')->with('error', 'Silakan masukkan token / NISN untuk login ke bilik suara.');
         }
 
         $voter = Auth::guard('voter')->user();
@@ -26,7 +22,7 @@ class VoterAuthenticate
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('voter.login')->with('error', 'Akun pemilih dinonaktifkan oleh panitia.');
+            return redirect()->route('voter.login')->with('error', 'Akun pemilih Anda telah dinonaktifkan oleh panitia.');
         }
 
         return $next($request);

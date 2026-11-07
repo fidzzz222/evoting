@@ -8,16 +8,14 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    /**
-     * Display the admin/petugas executive dashboard.
-     */
+    // dashboard utama admin dan petugas
     public function index()
     {
+        // update status jadwal semua agenda
         Event::syncAllEventStatuses();
-
         $user = Auth::user();
 
-        // Scope metrics and events based on user role using centralized scope
+        // filter agenda sesuai hak akses user
         $baseQuery = Event::accessibleBy($user);
 
         $totalEvents = (clone $baseQuery)->count();
@@ -25,6 +23,7 @@ class DashboardController extends Controller
         $draftEventsCount = (clone $baseQuery)->where('status', 'DRAFT')->count();
         $closedEventsCount = (clone $baseQuery)->where('status', 'CLOSED')->count();
 
+        // urutkan: aktif duluan, baru draft dan selesai
         $events = (clone $baseQuery)
             ->with(['candidates', 'creator'])
             ->withCount(['candidates', 'votes', 'participations'])

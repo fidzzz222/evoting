@@ -9,11 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectIfAdminAuthenticated
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
+    // Arahkan ke dashboard jika admin/petugas sudah terotentikasi
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::guard('web')->check()) {

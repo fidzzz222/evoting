@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 
 class AuditLogController extends Controller
 {
+    // Riwayat aktivitas audit log sistem dengan filter aksi dan kata kunci
     public function index(Request $request)
     {
         $query = AuditLog::latest();
