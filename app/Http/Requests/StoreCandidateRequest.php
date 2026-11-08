@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Candidate;
 use App\Models\Event;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

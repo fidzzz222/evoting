@@ -7,10 +7,7 @@ use App\Http\Requests\UpdateCandidateRequest;
 use App\Models\AuditLog;
 use App\Models\Candidate;
 use App\Models\Event;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class CandidateController extends Controller
 {

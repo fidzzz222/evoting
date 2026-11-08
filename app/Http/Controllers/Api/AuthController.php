@@ -46,7 +46,6 @@ class AuthController extends Controller
     {
         $request->validate([
             'identifier' => 'required|string',
-            'password' => 'nullable|string',
         ]);
 
         $voter = Voter::where('identifier', $request->identifier)->first();
@@ -54,13 +53,6 @@ class AuthController extends Controller
         if (! $voter) {
             return response()->json([
                 'message' => 'Kredensial tidak valid. NIS/NIP tidak ditemukan.',
-            ], 401);
-        }
-
-        // Cek password jika akun pemilih diproteksi kata sandi
-        if ($voter->password && (! $request->filled('password') || ! Hash::check($request->password, $voter->password))) {
-            return response()->json([
-                'message' => 'Password tidak valid',
             ], 401);
         }
 

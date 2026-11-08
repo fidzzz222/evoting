@@ -10,7 +10,6 @@ use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class EventController extends Controller
@@ -259,7 +258,7 @@ class EventController extends Controller
             ->findOrFail($id);
 
         if (empty($event->invite_token)) {
-            $event->invite_token = $this->generateUniqueInviteToken();
+            $event->invite_token = Event::generateUniqueInviteToken();
             $event->save();
         }
 
@@ -282,7 +281,7 @@ class EventController extends Controller
         }
 
         $event = $query->findOrFail($id);
-        $event->invite_token = $this->generateUniqueInviteToken();
+        $event->invite_token = Event::generateUniqueInviteToken();
         $event->save();
 
         AuditLog::log('REGENERATE_INVITE_TOKEN', "Membuat ulang invite token untuk event '{$event->title}'", [

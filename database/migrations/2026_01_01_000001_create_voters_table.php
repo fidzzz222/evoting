@@ -14,7 +14,6 @@ return new class extends Migration
             $table->string('nama');
             $table->string('kelas')->nullable(); // Misal: XII MIPA 1, Dewan Guru
             $table->enum('type', ['SISWA', 'GURU'])->default('SISWA');
-            $table->string('password');
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();

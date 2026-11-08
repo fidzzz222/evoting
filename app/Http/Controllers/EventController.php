@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Models\AuditLog;
-use App\Models\Candidate;
 use App\Models\Event;
 use App\Models\User;
 use App\Models\Voter;

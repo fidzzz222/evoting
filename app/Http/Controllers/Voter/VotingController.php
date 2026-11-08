@@ -4,14 +4,10 @@ namespace App\Http\Controllers\Voter;
 
 use App\Actions\CastVoteAction;
 use App\Http\Controllers\Controller;
-use App\Models\Candidate;
 use App\Models\Event;
 use App\Models\EventParticipation;
-use App\Models\Vote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class VotingController extends Controller
 {

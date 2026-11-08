@@ -7,8 +7,6 @@ use App\Models\AuditLog;
 use App\Models\Voter;
 use App\Services\VoterImportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VoterManagementController extends Controller

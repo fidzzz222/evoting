@@ -10,7 +10,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\Voter\VotingController;
-use App\Models\Event;
 use Illuminate\Support\Facades\Route;
 
 // Redirect halaman utama berdasarkan status login sesi user
@@ -39,7 +38,6 @@ Route::post('/logout', [VoterAuthController::class, 'logout'])->name('voter.logo
 // Rute portal & bilik suara pemilih (wajib login voter)
 Route::middleware('voter.auth')->group(function () {
     Route::get('/bilik', [VotingController::class, 'index'])->name('voter.index');
-    Route::get('/bilik-dashboard', [VotingController::class, 'index'])->name('voter.dashboard');
 
     Route::get('/bilik-suara/{roomCode}', [VotingController::class, 'showBooth'])->name('voter.booth');
     Route::post('/bilik-suara/{roomCode}/vote', [VotingController::class, 'submitVote'])->name('voter.vote.submit');

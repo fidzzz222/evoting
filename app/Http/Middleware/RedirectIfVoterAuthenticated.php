@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectIfVoterAuthenticated
 {
-    // Arahkan pemilih yang sudah login langsung ke bilik suara aktif atau dashboard
+    // Arahkan pemilih yang sudah login langsung ke bilik suara aktif atau halaman bilik
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::guard('voter')->check()) {
@@ -25,7 +25,7 @@ class RedirectIfVoterAuthenticated
                 return redirect()->route('voter.booth', $activeEvent->room_code);
             }
 
-            return redirect()->route('voter.dashboard');
+            return redirect()->route('voter.index');
         }
 
         return $next($request);

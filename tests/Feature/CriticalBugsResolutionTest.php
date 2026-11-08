@@ -16,7 +16,7 @@ class CriticalBugsResolutionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_bug1_voter_dashboard_loads_when_no_active_event_without_infinite_redirect(): void
+    public function test_bug1_voter_booth_loads_when_no_active_event_without_infinite_redirect(): void
     {
         $voter = Voter::create([
             'identifier' => 'NISN1001',
@@ -25,8 +25,8 @@ class CriticalBugsResolutionTest extends TestCase
             'is_active' => true,
         ]);
 
-        // When authenticated voter visits dashboard without ongoing events, it renders 200 OK
-        $response = $this->actingAs($voter, 'voter')->get(route('voter.dashboard'));
+        // When authenticated voter visits bilik without ongoing events, it renders 200 OK
+        $response = $this->actingAs($voter, 'voter')->get(route('voter.index'));
 
         $response->assertStatus(200);
         $response->assertViewIs('voter.index');
@@ -102,35 +102,40 @@ class CriticalBugsResolutionTest extends TestCase
         ]);
     }
 
-    public function test_bug3_api_voter_login_requires_password_when_voter_has_password(): void
+    public function test_bug3_api_voter_login_with_identifier(): void
     {
         Voter::create([
             'identifier' => 'NISN1003',
             'nama' => 'Ahmad Dani',
             'type' => 'SISWA',
-            'password' => Hash::make('secret_pass'),
             'is_active' => true,
         ]);
 
-        // Attempt login without password -> should be rejected 401
-        $noPassResponse = $this->postJson('/api/v1/auth/voter/login', [
-            'identifier' => 'NISN1003',
+        Voter::create([
+            'identifier' => 'NISN1004',
+            'nama' => 'Budi Santoso',
+            'type' => 'SISWA',
+            'is_active' => false,
         ]);
-        $noPassResponse->assertStatus(401);
 
-        // Attempt login with wrong password -> 401
-        $wrongPassResponse = $this->postJson('/api/v1/auth/voter/login', [
-            'identifier' => 'NISN1003',
-            'password' => 'wrong_pass',
+        // Attempt login with non-existent identifier -> 401
+        $notFoundResponse = $this->postJson('/api/v1/auth/voter/login', [
+            'identifier' => 'NISN9999',
         ]);
-        $wrongPassResponse->assertStatus(401);
+        $notFoundResponse->assertStatus(401);
 
-        // Correct password -> 200
+        // Attempt login with inactive voter -> 403
+        $inactiveResponse = $this->postJson('/api/v1/auth/voter/login', [
+            'identifier' => 'NISN1004',
+        ]);
+        $inactiveResponse->assertStatus(403);
+
+        // Correct identifier and active -> 200
         $correctResponse = $this->postJson('/api/v1/auth/voter/login', [
             'identifier' => 'NISN1003',
-            'password' => 'secret_pass',
         ]);
-        $correctResponse->assertStatus(200);
+        $correctResponse->assertStatus(200)
+            ->assertJsonStructure(['token', 'voter' => ['id', 'identifier', 'nama', 'type', 'is_active']]);
     }
 
     public function test_bug4_api_voter_scope_eligibility_enforced(): void

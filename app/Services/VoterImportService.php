@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\Voter;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
 
 class VoterImportService
 {
@@ -71,7 +70,7 @@ class VoterImportService
         ];
     }
 
-    // Import DPT dari CSV format API: identifier, nama, type, password
+    // Import DPT dari CSV format API: identifier, nama, type
     public function importCsvForApi(UploadedFile|string $file): array
     {
         $handle = $this->openCsvFile($file);
@@ -83,14 +82,13 @@ class VoterImportService
             fgetcsv($handle);
 
             while (($row = fgetcsv($handle)) !== false) {
-                if (count($row) < 4) {
+                if (count($row) < 3) {
                     continue;
                 }
 
                 $identifier = trim($row[0]);
                 $nama = trim($row[1]);
                 $type = strtoupper(trim($row[2]));
-                $password = trim($row[3]);
 
                 if (Voter::where('identifier', $identifier)->exists()) {
                     $errors[] = "Identifier {$identifier} sudah terdaftar.";
@@ -101,7 +99,6 @@ class VoterImportService
                     'identifier' => $identifier,
                     'nama' => $nama,
                     'type' => in_array($type, ['SISWA', 'GURU'], true) ? $type : 'SISWA',
-                    'password' => Hash::make($password),
                     'is_active' => true,
                 ]);
 
@@ -133,7 +130,6 @@ class VoterImportService
                 'identifier' => $vData['identifier'],
                 'nama' => $vData['nama'],
                 'type' => $vData['type'],
-                'password' => Hash::make($vData['password']),
                 'is_active' => true,
             ]);
 

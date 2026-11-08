@@ -42,7 +42,6 @@ class ApiEndpointsTest extends TestCase
             'identifier' => '1234567890',
             'nama' => 'Siswa Pemilih 1',
             'type' => 'SISWA',
-            'password' => Hash::make('1234'),
             'is_active' => true,
         ]);
     }
@@ -73,7 +72,6 @@ class ApiEndpointsTest extends TestCase
         // 2. Voter login
         $voterResponse = $this->postJson('/api/v1/auth/voter/login', [
             'identifier' => '1234567890',
-            'password' => '1234',
         ]);
 
         $voterResponse->assertStatus(200)

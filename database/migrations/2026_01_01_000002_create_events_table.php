@@ -13,6 +13,8 @@ return new class extends Migration
             $table->foreignId('created_by_user_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->string('category')->default('KETUA_OSIS'); // KETUA_OSIS, KETUA_MPK, KETUA_KELAS, ORGANISASI, VOTING_KEGIATAN
+            $table->string('target_scope', 20)->default('ALL');
+            $table->string('target_class', 100)->nullable();
             $table->text('description')->nullable();
             $table->string('room_code')->unique();
             $table->string('invite_token', 64)->nullable()->unique();

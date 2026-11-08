@@ -42,7 +42,6 @@ class AdminDashboardAndAuditLogTest extends TestCase
         $this->voter = Voter::create([
             'nama' => 'Ahmad Siswa',
             'identifier' => '102407',
-            'password' => Hash::make('siswa123'),
             'type' => 'SISWA',
             'kelas' => 'XII RPL 1',
             'is_active' => true,

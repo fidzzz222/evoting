@@ -7,10 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Event;
 use App\Models\EventParticipation;
-use App\Models\Vote;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class VotingController extends Controller
 {

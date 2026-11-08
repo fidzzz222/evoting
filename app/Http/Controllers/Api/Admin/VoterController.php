@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Voter;
 use App\Services\VoterImportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class VoterController extends Controller
@@ -40,7 +39,6 @@ class VoterController extends Controller
             'identifier' => 'required|string|unique:voters,identifier',
             'nama' => 'required|string|max:255',
             'type' => ['required', Rule::in(['SISWA', 'GURU'])],
-            'password' => 'required|string|min:4',
             'is_active' => 'sometimes|boolean',
         ]);
 
@@ -48,7 +46,6 @@ class VoterController extends Controller
             'identifier' => $validated['identifier'],
             'nama' => $validated['nama'],
             'type' => $validated['type'],
-            'password' => Hash::make($validated['password']),
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
@@ -81,7 +78,6 @@ class VoterController extends Controller
             'voters.*.identifier' => 'required|string',
             'voters.*.nama' => 'required|string',
             'voters.*.type' => ['required', Rule::in(['SISWA', 'GURU'])],
-            'voters.*.password' => 'required|string',
         ]);
 
         $result = $importService->importArrayForApi($validated['voters']);
@@ -92,7 +88,7 @@ class VoterController extends Controller
         ]);
     }
 
-    // Perbarui profil atau kata sandi pemilih
+    // Perbarui data profil pemilih
     public function update(Request $request, string $id)
     {
         $voter = Voter::findOrFail($id);
@@ -101,16 +97,12 @@ class VoterController extends Controller
             'identifier' => ['required', 'string', Rule::unique('voters', 'identifier')->ignore($voter->id)],
             'nama' => 'required|string|max:255',
             'type' => ['required', Rule::in(['SISWA', 'GURU'])],
-            'password' => 'nullable|string|min:4',
             'is_active' => 'sometimes|boolean',
         ]);
 
         $voter->identifier = $validated['identifier'];
         $voter->nama = $validated['nama'];
         $voter->type = $validated['type'];
-        if (!empty($validated['password'])) {
-            $voter->password = Hash::make($validated['password']);
-        }
         if (isset($validated['is_active'])) {
             $voter->is_active = $validated['is_active'];
         }

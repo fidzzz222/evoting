@@ -93,7 +93,7 @@
                     Menggunakan nomor identitas NISN/NIS untuk pemilihan Ketua OSIS, MPK, Pramuka, dan ketua ekstrakurikuler.
                 </p>
                 <div class="mt-3 pt-3 border-t border-slate-100 flex items-center text-[11px] font-medium text-slate-600">
-                    Otentikasi: NISN + Token Rahasia
+                    Otentikasi: NISN + Kode Bilik Suara
                 </div>
             </div>
 
@@ -109,7 +109,7 @@
                     Menggunakan NIP/NIK untuk pemilihan pengurus paguyuban guru, dewan kehormatan, dan komite perwakilan guru.
                 </p>
                 <div class="mt-3 pt-3 border-t border-slate-100 flex items-center text-[11px] font-medium text-slate-600">
-                    Otentikasi: NIP/NIK + Token Khusus
+                    Otentikasi: NIP + Kode Bilik Suara
                 </div>
             </div>
 

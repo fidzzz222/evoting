@@ -18,12 +18,10 @@ class Voter extends Authenticatable
         'nama',
         'kelas',
         'type',
-        'password',
         'is_active',
     ];
 
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 
@@ -31,7 +29,6 @@ class Voter extends Authenticatable
     {
         return [
             'is_active' => 'boolean',
-            'password' => 'hashed',
         ];
     }
 

@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\Petugas\CandidateController;
 use App\Http\Controllers\Api\Petugas\EventController;
 use App\Http\Controllers\Api\Petugas\MonitoringController;
 use App\Http\Controllers\Api\Voter\VotingController;
-use App\Http\Middleware\CheckRole;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {

@@ -73,9 +73,9 @@ class VoterImportServiceTest extends TestCase
         ]);
 
         // API CSV import
-        $csvContent = "identifier,nama,type,password\n" .
-            "API001,Ahmad Siswa,SISWA,pass123\n" .
-            "API002,Dewi Guru,GURU,pass456\n";
+        $csvContent = "identifier,nama,type\n" .
+            "API001,Ahmad Siswa,SISWA\n" .
+            "API002,Dewi Guru,GURU\n";
 
         $file = UploadedFile::fake()->createWithContent('voters.csv', $csvContent);
 
@@ -91,8 +91,8 @@ class VoterImportServiceTest extends TestCase
         // Duplicate returns error in response
         $response2 = $this->postJson('/api/v1/admin/voters/import', [
             'voters' => [
-                ['identifier' => 'API001', 'nama' => 'Duplicate', 'type' => 'SISWA', 'password' => 'secret'],
-                ['identifier' => 'API003', 'nama' => 'New Voter', 'type' => 'SISWA', 'password' => 'secret'],
+                ['identifier' => 'API001', 'nama' => 'Duplicate', 'type' => 'SISWA'],
+                ['identifier' => 'API003', 'nama' => 'New Voter', 'type' => 'SISWA'],
             ],
         ]);
 

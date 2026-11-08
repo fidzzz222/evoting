@@ -39,7 +39,6 @@ class EvotingSystemTest extends TestCase
         $this->voter = Voter::create([
             'nama' => 'Budi Siswa',
             'identifier' => '123456',
-            'password' => Hash::make('pass123'),
             'type' => 'SISWA',
             'kelas' => 'XII IPA 1',
             'is_active' => true,
@@ -312,7 +311,6 @@ class EvotingSystemTest extends TestCase
         $otherStudent = Voter::create([
             'nama' => 'Siswa Kelas Lain',
             'identifier' => '654321',
-            'password' => Hash::make('pass123'),
             'type' => 'SISWA',
             'kelas' => 'X-RPL-1',
             'is_active' => true,
@@ -387,14 +385,12 @@ class EvotingSystemTest extends TestCase
         Voter::create([
             'nama' => 'Guru A',
             'identifier' => 'NIP001',
-            'password' => Hash::make('pass'),
             'type' => 'GURU',
             'is_active' => true,
         ]);
         Voter::create([
             'nama' => 'Siswa RPL 1',
             'identifier' => 'NISN101',
-            'password' => Hash::make('pass'),
             'type' => 'SISWA',
             'kelas' => 'X-RPL',
             'is_active' => true,
@@ -402,7 +398,6 @@ class EvotingSystemTest extends TestCase
         Voter::create([
             'nama' => 'Siswa RPL 2',
             'identifier' => 'NISN102',
-            'password' => Hash::make('pass'),
             'type' => 'SISWA',
             'kelas' => 'X-RPL',
             'is_active' => true,
