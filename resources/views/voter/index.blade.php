@@ -43,6 +43,30 @@
         </div>
     </div>
 
+    <!-- Quick Access History Card (Concept 2) -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shrink-0">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-slate-900 tracking-tight">Log &amp; Riwayat Partisipasi Pemilihan</h4>
+                <p class="text-xs text-slate-500">
+                    Pantau status hak suara yang telah digunakan pada berbagai agenda pemilihan beserta rekam jejak audit keamanan akun Anda.
+                </p>
+            </div>
+        </div>
+        <a href="{{ route('voter.history') }}" 
+           class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shrink-0 transition-colors shadow-2xs">
+            <span>Buka Riwayat &amp; Log</span>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </a>
+    </div>
+
     <!-- Active Elections Section -->
     <div>
         <div class="flex items-center justify-between mb-5">

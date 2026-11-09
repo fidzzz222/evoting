@@ -111,7 +111,7 @@
                                 </span>
                             </div>
                             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200/60">
-                                <div class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: {{ $turnoutRate }}%"></div>
+                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: {{ $turnoutRate }}%"></div>
                             </div>
                             <div class="flex items-center justify-between text-xs font-medium text-slate-500">
                                 <div class="flex items-center gap-1">

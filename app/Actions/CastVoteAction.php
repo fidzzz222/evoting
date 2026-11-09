@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Models\AuditLog;
 use App\Models\Candidate;
 use App\Models\Event;
 use App\Models\EventParticipation;
@@ -62,6 +63,19 @@ class CastVoteAction
                 'has_voted' => true,
                 'voted_at' => $now,
             ]);
+
+            // catat log audit penyaluran suara (tanpa mencatat pilihan kandidat untuk menjamin asas LUBER / rahasia)
+            AuditLog::log(
+                'SUARA_DISALURKAN',
+                "Pemilih {$voter->nama} ({$voter->identifier}) telah menggunakan hak suara pada pemilihan '{$event->title}' (#{$event->room_code})",
+                [
+                    'event_id' => $event->id,
+                    'event_title' => $event->title,
+                    'room_code' => $event->room_code,
+                    'voted_at' => $now->toIso8601String(),
+                ],
+                $voter
+            );
 
             return $vote;
         });

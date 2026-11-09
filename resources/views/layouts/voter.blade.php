@@ -12,10 +12,28 @@
                 </div>
 
                 <div class="flex items-center space-x-3">
-                    {{-- Voter Badge --}}
+                    {{-- Voter Badge & Nav --}}
                     @if(Auth::guard('voter')->check())
                         @php $voter = Auth::guard('voter')->user(); @endphp
-                        <div class="hidden sm:flex items-center space-x-2.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs">
+                        
+                        <nav class="flex items-center gap-1 sm:gap-1.5 mr-1 sm:mr-2">
+                            <a href="{{ route('voter.index') }}" 
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('voter.index') ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                </svg>
+                                <span class="hidden sm:inline">Bilik</span>
+                            </a>
+                            <a href="{{ route('voter.history') }}" 
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('voter.history') ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Riwayat & Log</span>
+                            </a>
+                        </nav>
+
+                        <div class="hidden md:flex items-center space-x-2.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs">
                             <div class="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs shrink-0">
                                 {{ substr($voter->nama, 0, 1) }}
                             </div>

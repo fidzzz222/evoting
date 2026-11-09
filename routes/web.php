@@ -38,6 +38,7 @@ Route::post('/logout', [VoterAuthController::class, 'logout'])->name('voter.logo
 // Rute portal & bilik suara pemilih (wajib login voter)
 Route::middleware('voter.auth')->group(function () {
     Route::get('/bilik', [VotingController::class, 'index'])->name('voter.index');
+    Route::get('/bilik/riwayat', [VotingController::class, 'history'])->name('voter.history');
 
     Route::get('/bilik-suara/{roomCode}', [VotingController::class, 'showBooth'])->name('voter.booth');
     Route::post('/bilik-suara/{roomCode}/vote', [VotingController::class, 'submitVote'])->name('voter.vote.submit');

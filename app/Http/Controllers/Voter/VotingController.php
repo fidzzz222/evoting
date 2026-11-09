@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Voter;
 
 use App\Actions\CastVoteAction;
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\EventParticipation;
 use Illuminate\Http\Request;
@@ -187,5 +188,47 @@ class VotingController extends Controller
             ->first();
 
         return view('voter.already-voted', compact('event', 'voter', 'participation'));
+    }
+
+    // halaman riwayat partisipasi dan log aktivitas pemilih
+    public function history()
+    {
+        $voter = Auth::guard('voter')->user();
+
+        Event::syncAllExpiredEvents();
+
+        $participations = EventParticipation::with(['event' => function ($q) {
+                $q->withCount('candidates');
+            }])
+            ->where('voter_id', $voter->id)
+            ->where('has_voted', true)
+            ->orderByDesc('voted_at')
+            ->get();
+
+        $auditLogs = AuditLog::where('user_type', 'VOTER')
+            ->where('user_id', $voter->id)
+            ->latest('id')
+            ->take(50)
+            ->get();
+
+        $votedEventIds = $participations->pluck('event_id')->all();
+        $eligibleOngoingEvents = Event::where('status', 'PUBLISHED')
+            ->latest()
+            ->get()
+            ->filter(function ($e) use ($voter, $votedEventIds) {
+                return $e->isOngoing() && !in_array($e->id, $votedEventIds) && $e->isVoterEligible($voter);
+            });
+
+        $totalVotes = $participations->count();
+        $lastVotedAt = $participations->first()?->voted_at;
+
+        return view('voter.history', compact(
+            'voter',
+            'participations',
+            'auditLogs',
+            'eligibleOngoingEvents',
+            'totalVotes',
+            'lastVotedAt'
+        ));
     }
 }

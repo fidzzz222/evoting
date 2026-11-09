@@ -43,19 +43,41 @@
             </div>
         </div>
 
-        <!-- Action Button for Kiosk Bilik Suara -->
-        <div>
-            <form action="{{ route('voter.logout') }}" method="POST">
+        <!-- Action Buttons (Concept 2) -->
+        <div class="space-y-3">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                <a 
+                    href="{{ route('voter.history') }}" 
+                    class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors inline-flex items-center justify-center gap-2"
+                >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Lihat Riwayat &amp; Log</span>
+                </a>
+                
+                <a 
+                    href="{{ route('voter.index') }}" 
+                    class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm shadow-2xs transition-colors inline-flex items-center justify-center gap-2"
+                >
+                    <span>Kembali ke Bilik</span>
+                </a>
+            </div>
+
+            <form action="{{ route('voter.logout') }}" method="POST" class="pt-2">
                 @csrf
                 <button 
                     type="submit" 
-                    class="w-full sm:w-auto min-w-[220px] px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer inline-flex items-center justify-center"
+                    class="text-xs text-rose-600 hover:text-rose-700 hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
                 >
-                    Selesai & Keluar
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Selesai &amp; Keluar Sesi</span>
                 </button>
             </form>
-            <p class="text-[11px] text-slate-400 mt-2.5">
-                Sesi akan ditutup dan bilik suara siap digunakan kembali.
+            <p class="text-[11px] text-slate-400">
+                Data suara telah dienkripsi secara anonim demi menjaga asas Langsung, Umum, Bebas, dan Rahasia.
             </p>
         </div>
     </div>

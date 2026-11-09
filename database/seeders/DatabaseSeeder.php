@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
 
         $petugas2 = User::create([
             'nama' => 'Siti Rahma (Panitia MPK)',
-            'email' => 'petugas2@evoting.sch.id',
+            'email' => '    ',
             'password' => Hash::make('password123'),
             'role' => 'PETUGAS',
         ]);
